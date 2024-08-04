@@ -79,14 +79,14 @@ class Decryptor
         using ProgressCallback =
             std::function<void(const std::string &instance, std::size_t)>;
 
-        Decryptor(const Logger::LoggerPointer parent_logger = {},
+        Decryptor(const Logger::LoggerPointer &parent_logger = {},
                   const std::string &instance = {});
         virtual ~Decryptor();
 
         DecryptResult Decrypt(const std::u8string &password,
                               std::istream &source,
                               std::ostream &destination,
-                              const ProgressCallback progress_callback = {},
+                              const ProgressCallback &progress_callback = {},
                               const std::size_t progress_interval = 0);
         void Cancel();
         bool Activate();
@@ -109,7 +109,7 @@ class Decryptor
                                     std::ostream &destination,
                                     const std::span<const std::uint8_t, 16> iv,
                                     const std::span<const std::uint8_t, 32> key,
-                                    const ProgressCallback progress_callback,
+                                    const ProgressCallback &progress_callback,
                                     const std::size_t progress_interval);
 
         Logger::LoggerPointer logger;

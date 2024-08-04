@@ -79,7 +79,7 @@ class Encryptor
         using ProgressCallback =
             std::function<void(const std::string &instance, std::size_t)>;
 
-        Encryptor(const Logger::LoggerPointer parent_logger = {},
+        Encryptor(const Logger::LoggerPointer &parent_logger = {},
                   const std::string &instance = {});
         virtual ~Encryptor();
 
@@ -89,7 +89,7 @@ class Encryptor
             std::istream &source,
             std::ostream &destination,
             const std::vector<std::pair<std::string, std::string>> &extensions,
-            const ProgressCallback progress_callback = {},
+            const ProgressCallback &progress_callback = {},
             const std::size_t progress_interval = 0);
         void Cancel();
         bool Activate();
@@ -115,7 +115,7 @@ class Encryptor
                                     std::ostream &destination,
                                     const std::span<const std::uint8_t, 16> iv,
                                     const std::span<const std::uint8_t, 32> key,
-                                    const ProgressCallback progress_callback,
+                                    const ProgressCallback &progress_callback,
                                     const std::size_t progress_interval);
 
         Logger::LoggerPointer logger;

@@ -16,6 +16,9 @@ endif()
 # Option to control ability to install the library
 option(aescrypt_engine_INSTALL "Install the AES Crypt Engine" ON)
 
+# Determine whether clang-tidy will be performed
+option(aescrypt_engine_CLANG_TIDY "Use clang-tidy to perform linting during build" OFF)
+
 # Add the dependencies and source directories
 add_subdirectory(dependencies)
 add_subdirectory(src)

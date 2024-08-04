@@ -123,7 +123,7 @@ std::ostream &operator<<(std::ostream &o, const EncryptResult result)
  *  Comments:
  *      None.
  */
-Encryptor::Encryptor(const Logger::LoggerPointer parent_logger,
+Encryptor::Encryptor(const Logger::LoggerPointer &parent_logger,
                      const std::string &instance) :
     logger{std::make_shared<Logger::Logger>(parent_logger,
                                             CreateComponent("ENC", instance))},
@@ -213,7 +213,7 @@ EncryptResult Encryptor::Encrypt(
     std::istream &source,
     std::ostream &destination,
     const std::vector<std::pair<std::string, std::string>> &extensions,
-    const ProgressCallback progress_callback,
+    const ProgressCallback &progress_callback,
     const std::size_t progress_interval)
 {
     const std::array<char, 5> aes_crypt_header =
@@ -377,7 +377,7 @@ void Encryptor::Cancel()
     if (!active) return;
 
     // Wait for the encrypting thread to complete
-    cv.wait(lock, [&]() -> bool { return active == false; });
+    cv.wait(lock, [&]() -> bool { return !active; });
 }
 
 /*
@@ -436,10 +436,10 @@ EncryptResult Encryptor::BeginEncrypting()
     std::lock_guard<std::mutex> lock(encryptor_mutex);
 
     // If the encryption object is in a cancelled state, just return
-    if (cancelled == true) return EncryptResult::EncryptionCancelled;
+    if (cancelled) return EncryptResult::EncryptionCancelled;
 
     // If already encrypting, return an error response
-    if (active == true) return EncryptResult::AlreadyEncrypting;
+    if (active) return EncryptResult::AlreadyEncrypting;
 
     // Indicate that the thread is encrypting
     active = true;
@@ -509,7 +509,7 @@ EncryptResult Encryptor::WriteExtensions(
     constexpr std::size_t Max_Extension_Length = 65535;
 
     // Array to hold an extension length in network byte order
-    std::array<char, 2> extension_length;
+    std::array<char, 2> extension_length{};
 
     // Iterate over the extensions
     for (const auto &[identifier, value] : extensions)
@@ -534,8 +534,8 @@ EncryptResult Encryptor::WriteExtensions(
         if (length > 65535) return EncryptResult::InvalidExtension;
 
         // Assign the length in network byte order
-        extension_length[0] = (length >> 8) & 0xff;
-        extension_length[1] = (length     ) & 0xff;
+        extension_length[0] = static_cast<char>((length >> 8) & 0xff);
+        extension_length[1] = static_cast<char>((length     ) & 0xff);
 
         // Write the extension length
         destination.write(extension_length.data(), extension_length.size());
@@ -547,7 +547,8 @@ EncryptResult Encryptor::WriteExtensions(
         }
 
         // Write the actual extension identifier
-        destination.write(identifier.data(), identifier.size());
+        destination.write(identifier.data(),
+                          static_cast<std::streamsize>(identifier.size()));
         if (!destination.good())
         {
             logger->error << "Error writing extension to output stream"
@@ -565,7 +566,8 @@ EncryptResult Encryptor::WriteExtensions(
         }
 
         // Write the actual extension value
-        destination.write(value.data(), value.size());
+        destination.write(value.data(),
+                          static_cast<std::streamsize>(value.size()));
         if (!destination.good())
         {
             logger->error << "Error writing extension to output stream"
@@ -698,7 +700,7 @@ EncryptResult Encryptor::WriteSessionData(
     SecUtil::SecureArray<std::uint8_t, 32> key;
     SecUtil::SecureArray<std::uint8_t, 32> computed_hmac;
     SecUtil::SecureArray<std::uint8_t, 16> ciphertext;
-    std::array<std::uint8_t, 4> iterations;
+    std::array<std::uint8_t, 4> iterations{};
 
     // Derive the encryption key to encrypt the session data
     result = DeriveKey(password, kdf_iterations, public_iv, key);
@@ -862,7 +864,7 @@ EncryptResult Encryptor::EncryptStream(
                                 std::ostream &destination,
                                 const std::span<const std::uint8_t, 16> iv,
                                 const std::span<const std::uint8_t, 32> key,
-                                const ProgressCallback progress_callback,
+                                const ProgressCallback &progress_callback,
                                 const std::size_t progress_interval)
 {
     SecUtil::SecureArray<std::uint8_t, 32> computed_hmac;

@@ -130,7 +130,7 @@ std::ostream &operator<<(std::ostream &o, const DecryptResult result)
  *  Comments:
  *      None.
  */
-Decryptor::Decryptor(const Logger::LoggerPointer parent_logger,
+Decryptor::Decryptor(const Logger::LoggerPointer &parent_logger,
                      const std::string &instance) :
     logger{std::make_shared<Logger::Logger>(parent_logger,
                                             CreateComponent("DEC", instance))},
@@ -210,7 +210,7 @@ Decryptor::~Decryptor()
 DecryptResult Decryptor::Decrypt(const std::u8string &password,
                                  std::istream &source,
                                  std::ostream &destination,
-                                 const ProgressCallback progress_callback,
+                                 const ProgressCallback &progress_callback,
                                  const std::size_t progress_interval)
 {
     SecUtil::SecureArray<std::uint8_t, 16> iv;
@@ -288,7 +288,7 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
     std::uint32_t kdf_iterations = 0;
     if (stream_version >= 3)
     {
-        std::array<std::uint8_t, 4> iterations;
+        std::array<std::uint8_t, 4> iterations{};
         result = ReadOctets(source, iterations);
         if (result != DecryptResult::Success)
         {
@@ -395,7 +395,7 @@ void Decryptor::Cancel()
     if (!active) return;
 
     // Wait for the decrypting thread to complete
-    cv.wait(lock, [&]() -> bool { return active == false; });
+    cv.wait(lock, [&]() -> bool { return !active; });
 }
 
 /*
@@ -454,10 +454,10 @@ DecryptResult Decryptor::BeginDecrypting()
     std::lock_guard<std::mutex> lock(decryptor_mutex);
 
     // If the decryption object is in a cancelled state, just return
-    if (cancelled == true) return DecryptResult::DecryptionCancelled;
+    if (cancelled) return DecryptResult::DecryptionCancelled;
 
     // If already decrypting, return an error response
-    if (active == true) return DecryptResult::AlreadyDecrypting;
+    if (active) return DecryptResult::AlreadyDecrypting;
 
     // Indicate that the thread is decrypting
     active = true;
@@ -585,7 +585,8 @@ DecryptResult Decryptor::ReadOctets(std::istream &source,
                                     std::span<std::uint8_t> octets)
 {
     // Read octets from the source stream
-    source.read(reinterpret_cast<char *>(octets.data()), octets.size());
+    source.read(reinterpret_cast<char *>(octets.data()),
+                static_cast<std::streamsize>(octets.size()));
 
     // Ensure there was no error reading from the stream
     if (!source.good())
@@ -629,8 +630,8 @@ DecryptResult Decryptor::ReadOctets(std::istream &source,
  */
 DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
 {
-    std::uint16_t extension_length;
-    std::uint8_t buffer[2];
+    std::uint16_t extension_length{};
+    std::uint8_t buffer[2]{};
 
     // Since stream format version 0 & 1 did not use extensions, just return
     if (stream_version < 2) return DecryptResult::Success;
@@ -815,7 +816,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
     SecUtil::SecureArray<std::uint8_t, 16> plaintext_iv;
     SecUtil::SecureArray<std::uint8_t, 32> computed_hmac;
     SecUtil::SecureArray<std::uint8_t, 32> expected_hmac;
-    DecryptResult result;
+    DecryptResult result{};
 
     // For AES Crypt stream version 0, there is nothing more to do
     if (stream_version == 0) return DecryptResult::Success;
@@ -953,7 +954,7 @@ DecryptResult Decryptor::DecryptStream(
                                 std::ostream &destination,
                                 const std::span<const std::uint8_t, 16> iv,
                                 const std::span<const std::uint8_t, 32> key,
-                                const ProgressCallback progress_callback,
+                                const ProgressCallback &progress_callback,
                                 const std::size_t progress_interval)
 {
     SecUtil::SecureArray<std::uint8_t, 64> ring_buffer;
@@ -1009,7 +1010,7 @@ DecryptResult Decryptor::DecryptStream(
             if (cancelled) return DecryptResult::DecryptionCancelled;
 
             // Is there a plaintext block to write?
-            if (plaintext_to_write == true)
+            if (plaintext_to_write)
             {
                 // Write the plaintext to the output stream
                 destination.write(reinterpret_cast<char *>(plaintext.data()),
@@ -1174,7 +1175,7 @@ DecryptResult Decryptor::DecryptStream(
             // There MUST be a block of unwritten plaintext, else there was a
             // logic error; this should never happen in practice, but it is
             // possible to construct a flawed stream, so test for it
-            if (plaintext_to_write == false)
+            if (!plaintext_to_write)
             {
                 logger->error << "Premature end of ciphertext stream"
                               << std::flush;
@@ -1206,7 +1207,7 @@ DecryptResult Decryptor::DecryptStream(
 
             // Write the plaintext to the output stream
             destination.write(reinterpret_cast<char *>(plaintext.data()),
-                              final_block_size);
+                              static_cast<std::streamsize>(final_block_size));
 
             // Ensure there are no errors on writing output
             if (!destination.good())
