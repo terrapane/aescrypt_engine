@@ -68,14 +68,14 @@ nn Octets - Extension identifier.  This is either a URI or an standard
             upon by software to contain accurate information.
 nn Octets - The contents of the extension
 .... End of repeating extension block section
- 4 octets - KDF iteration value
+ 4 octets - KDF iteration value (network byte order)
 16 Octets - Initialization Vector (IV) used to encrypt the Session IV and
             Session Key
 48 Octets - Encrypted Session IV and 256-bit AES Session Key used to encrypt the
             stream, protected by a raw key or PBKDF2-derived key
             (IV = 16 octets; Key = 32 octets)
 32 Octets - HMAC-SHA256(48-octet IV and KEY || 0x03)
-nn Octets - Ciphertext (AES-256 in CBC mode; 2^64 octets max)
+nn Octets - Ciphertext (AES-256 in CBC mode; PKCS#7 padded; 2^64 octets max)
 32 Octets - HMAC-SHA256(nn octets)
 ```
 
