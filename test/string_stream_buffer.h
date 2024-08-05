@@ -50,11 +50,10 @@ class StringStreamBuffer : public std::streambuf
         {
         }
     protected:
-        virtual pos_type seekoff(
-            off_type off,
-            std::ios_base::seekdir dir,
-            [[maybe_unused]] std::ios_base::openmode which = std::ios_base::in |
-                                                             std::ios_base::out)
+        pos_type seekoff(off_type off,
+                         std::ios_base::seekdir dir,
+                         [[maybe_unused]] std::ios_base::openmode which =
+                             std::ios_base::in | std::ios_base::out) override
         {
             if (dir == std::ios_base::cur)
             {
@@ -87,9 +86,9 @@ class StringStreamBuffer : public std::streambuf
             return gptr() - eback();
         }
 
-        virtual pos_type seekpos(pos_type pos,
-                                 std::ios_base::openmode which =
-                                     std::ios_base::in | std::ios_base::out)
+        pos_type seekpos(pos_type pos,
+                         std::ios_base::openmode which =
+                             std::ios_base::in | std::ios_base::out) override
         {
             return seekoff(pos, std::ios_base::beg, which);
         }
