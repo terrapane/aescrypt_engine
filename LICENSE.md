@@ -4,7 +4,7 @@
 
 This is commercial software and a license may be purchased by visiting
 [Terrapane](https://www.terrapane.com).  You may download the software and try
-it to see if it meets your needs, but please purchasing a license if you
+it to see if it meets your needs, but please purchase a license if you
 find the software useful.  Your financial support is important so we can
 continue to improve and enhance this and our other software products.
 
