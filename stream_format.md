@@ -20,7 +20,7 @@ difference being the input into the Hash Message Authentication Code (HMAC)
 functions, which are modified to improve security.  Additionally, the
 Key Derivation Function (KDF) employed to generate a key from a password now
 uses PBKDF2 with a variable number of iterations using SHA-512 as the hash
-function.
+function.  Lastly, PKCS#7 is used for padding the final ciphertext block.
 
 ```text
  3 Octets - "AES"
