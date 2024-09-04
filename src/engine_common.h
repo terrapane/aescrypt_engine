@@ -67,8 +67,7 @@ constexpr std::uint8_t Latest_AES_Crypt_Stream_Version = 3;
 constexpr std::string CreateComponent(const std::string &component,
                                       const std::string &instance)
 {
-    return std::string(component) +
-           (instance.empty() ? std::string() : std::string(":") + instance);
+    return instance.empty() ? component : component + ":" + instance;
 }
 
 /*
