@@ -1,5 +1,9 @@
 # Change Log
 
+v4.0.2
+    - Updated secutil to 1.0.1 for better Linux compatibility
+    - Updated other library dependencies to align to secutil dependency
+
 v4.0.1
     - Simplification of CreateComponent() function
 

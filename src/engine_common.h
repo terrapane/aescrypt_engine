@@ -62,10 +62,11 @@ constexpr std::uint8_t Latest_AES_Crypt_Stream_Version = 3;
  *      The string to use as the component parameter to the Logger.
  *
  *  Comments:
- *      None.
+ *      This can be made constexpr in C++20, but some newish compilers do not
+ *      yet support constexpr string functions like this.
  */
-constexpr std::string CreateComponent(const std::string &component,
-                                      const std::string &instance)
+static inline std::string CreateComponent(const std::string &component,
+                                          const std::string &instance)
 {
     return instance.empty() ? component : component + ":" + instance;
 }
