@@ -892,6 +892,12 @@ EncryptResult Encryptor::EncryptStream(
         progress_octets = 0;
         modulo = 0;
 
+        // Issue progress callback (facilitate initial rendering)
+        if ((progress_interval > 0) && progress_callback)
+        {
+            progress_callback(instance, octets_consumed);
+        }
+
         // Read the input stream until there is no more data
         while (!source.eof())
         {
@@ -946,7 +952,7 @@ EncryptResult Encryptor::EncryptStream(
             if ((progress_interval > 0) && progress_callback &&
                 (progress_octets >= progress_interval))
             {
-                // Issue callback
+                // Issue progress callback
                 progress_callback(instance, octets_consumed);
 
                 // Clear the progress octet count
@@ -979,7 +985,7 @@ EncryptResult Encryptor::EncryptStream(
     // Issue a final progress callback
     if ((progress_interval > 0) && progress_callback)
     {
-        // Issue callback
+        // Issue progress callback
         progress_callback(instance, octets_consumed);
     }
 

@@ -1,5 +1,9 @@
 # Change Log
 
+v4.0.3 (not yet released)
+    - Issue initial progress callback before iterating over the entire stream
+      to facilitate rendering by the called application
+
 v4.0.2
     - Updated secutil to 1.0.1 for better Linux compatibility
     - Updated other library dependencies to align to secutil dependency

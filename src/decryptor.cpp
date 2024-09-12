@@ -1003,6 +1003,12 @@ DecryptResult Decryptor::DecryptStream(
         // Initialize the progress_octets to drive progress callbacks
         progress_octets = octets_consumed;
 
+        // Issue progress callback (facilitate initial rendering)
+        if ((progress_interval > 0) && progress_callback)
+        {
+            progress_callback(instance, octets_consumed);
+        }
+
         // Iterate over all of the ciphertext blocks (block at tail + 16)
         while(!source.eof())
         {
@@ -1049,7 +1055,7 @@ DecryptResult Decryptor::DecryptStream(
             if ((progress_interval > 0) && progress_callback &&
                 (progress_octets >= progress_interval))
             {
-                // Issue callback
+                // Issue progress callback
                 progress_callback(instance, octets_consumed);
 
                 // Clear the progress octet count
