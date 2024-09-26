@@ -1,6 +1,6 @@
 # Change Log
 
-v4.0.3 (not yet released)
+v4.0.3
     - Issue initial progress callback before iterating over the entire stream
       to facilitate rendering by the called application
 
