@@ -62,7 +62,7 @@ FetchContent_Declare(libkdf
 # Fetch the Logger library
 FetchContent_Declare(logger
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/logger.git
-    GIT_TAG        v1.0.0
+    GIT_TAG        v1.0.1
     GIT_SHALLOW    true)
 
 # If not installing aescrypt_engine, turn off installation for dependencies
