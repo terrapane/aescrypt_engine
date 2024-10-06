@@ -38,7 +38,7 @@ FetchContent_Declare(secutil
 # Fetch character-related utilities
 FetchContent_Declare(charutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/charutil.git
-    GIT_TAG        v1.0.0
+    GIT_TAG        v1.0.1
     GIT_SHALLOW    true)
 
 # Fetch the random generator library
