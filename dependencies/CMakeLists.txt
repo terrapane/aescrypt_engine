@@ -66,15 +66,13 @@ FetchContent_Declare(logger
     GIT_SHALLOW    true)
 
 # If not installing aescrypt_engine, turn off installation for dependencies
-if(NOT aescrypt_engine_INSTALL)
-    set(libaes_INSTALL OFF)
-    set(secutil_INSTALL OFF)
-    set(charutil_INSTALL OFF)
-    set(random_INSTALL OFF)
-    set(libhash_INSTALL OFF)
-    set(libkdf_INSTALL OFF)
-    set(logger_INSTALL OFF)
-endif()
+set(libaes_INSTALL ${aescrypt_engine_INSTALL})
+set(secutil_INSTALL ${aescrypt_engine_INSTALL})
+set(charutil_INSTALL ${aescrypt_engine_INSTALL})
+set(random_INSTALL ${aescrypt_engine_INSTALL})
+set(libhash_INSTALL ${aescrypt_engine_INSTALL})
+set(libkdf_INSTALL ${aescrypt_engine_INSTALL})
+set(logger_INSTALL ${aescrypt_engine_INSTALL})
 
 # Make dependencies available
 FetchContent_MakeAvailable(libaes secutil charutil random libhash libkdf logger)
