@@ -1012,9 +1012,6 @@ DecryptResult Decryptor::DecryptStream(
         // Iterate over all of the ciphertext blocks (block at tail + 16)
         while(!source.eof())
         {
-            // If cancelled, terminate
-            if (cancelled) return DecryptResult::DecryptionCancelled;
-
             // Is there a plaintext block to write?
             if (plaintext_to_write)
             {

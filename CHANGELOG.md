@@ -1,5 +1,9 @@
 # Change Log
 
+v4.0.5
+
+- Changed the encryption/decryption cancellation logic for consistency
+
 v4.0.4
 
 - Updated to latest dependencies

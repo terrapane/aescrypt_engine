@@ -901,9 +901,6 @@ EncryptResult Encryptor::EncryptStream(
         // Read the input stream until there is no more data
         while (!source.eof())
         {
-            // If cancelled, immediately return
-            if (cancelled) return EncryptResult::EncryptionCancelled;
-
             // Attempt to read the next 16 octets
             source.read(reinterpret_cast<char *>(plaintext.data()), 16);
             if (source.bad() || (!source.good() && !source.eof()))
@@ -946,6 +943,13 @@ EncryptResult Encryptor::EncryptStream(
             {
                 logger->error << "Error writing ciphertext" << std::flush;
                 return EncryptResult::IOError;
+            }
+
+            // If encryption is cancelled, return early
+            if (cancelled)
+            {
+                logger->warning << "Encryption cancelled" << std::flush;
+                return EncryptResult::EncryptionCancelled;
             }
 
             // Issue a progress callback when appropriate
