@@ -3,6 +3,7 @@
 v4.0.5
 
 - Changed the encryption/decryption cancellation logic for consistency
+- Updated dependencies (libaes, secutil)
 
 v4.0.4
 
