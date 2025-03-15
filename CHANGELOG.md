@@ -1,5 +1,13 @@
 # Change Log
 
+v4.0.8
+
+- Changes required to build on FreeBSD
+
+v4.0.7
+
+- Updated STF and AES dependencies
+
 v4.0.6
 
 - Updated to latest dependencies
