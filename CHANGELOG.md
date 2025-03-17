@@ -1,5 +1,9 @@
 # Change Log
 
+v4.0.9
+
+- Updated libhash and libkdf dependencies
+
 v4.0.8
 
 - Changes required to build on FreeBSD

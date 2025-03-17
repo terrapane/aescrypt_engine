@@ -50,13 +50,13 @@ FetchContent_Declare(random
 # Fetch the hashing library
 FetchContent_Declare(libhash
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libhash.git
-    GIT_TAG        v1.0.4
+    GIT_TAG        v1.0.5
     GIT_SHALLOW    true)
 
 # Fetch the Key Derivation Function library
 FetchContent_Declare(libkdf
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libkdf.git
-    GIT_TAG        v1.0.4
+    GIT_TAG        v1.0.5
     GIT_SHALLOW    true)
 
 # Fetch the Logger library
