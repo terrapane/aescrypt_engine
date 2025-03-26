@@ -518,12 +518,10 @@ void Decryptor::FinishedDecrypting()
 DecryptResult Decryptor::DetermineVersion(std::istream &source)
 {
     // Buffer for "AES" and version (initialized to zero)
-    char version_buffer[4]{};
+    std::array<std::uint8_t, 4> version_buffer{};
 
     // Read the first 4 octets of the stream ("AES" and version number)
-    auto result = ReadOctets(source,
-                             {reinterpret_cast<std::uint8_t *>(version_buffer),
-                              sizeof(version_buffer)});
+    auto result = ReadOctets(source, version_buffer);
     if (result != DecryptResult::Success)
     {
         logger->error << "Unable to determine stream version" << std::flush;

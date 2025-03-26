@@ -20,6 +20,7 @@
 
 #include <climits>
 #include <algorithm>
+#include <array>
 #include <terra/aescrypt/engine/encryptor.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/secutil/secure_vector.h>
