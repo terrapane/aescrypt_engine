@@ -1,5 +1,10 @@
 # Change Log
 
+v4.0.10
+
+- Updated the following to the latest library version:
+  libaes, secutil, libhash, libkdf, and logger.
+
 v4.0.9
 
 - Updated libhash and libkdf dependencies

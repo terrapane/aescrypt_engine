@@ -14,8 +14,8 @@ set_target_properties(test_encryption
 # Specify the compiler options
 target_compile_options(test_encryption
     PRIVATE
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>: -Wpedantic -Wextra -Wall>
-        $<$<CXX_COMPILER_ID:MSVC>: >)
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wpedantic -Wextra -Wall>
+        $<$<CXX_COMPILER_ID:MSVC>:>)
 
 # Ensure CTest can find the test
 add_test(NAME test_encryption

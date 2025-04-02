@@ -26,13 +26,13 @@ endif()
 # Fetch the AES library
 FetchContent_Declare(libaes
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libaes.git
-    GIT_TAG        v1.0.5
+    GIT_TAG        v1.0.6
     GIT_SHALLOW    true)
 
 # Fetch security utilities library
 FetchContent_Declare(secutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/secutil.git
-    GIT_TAG        v1.0.4
+    GIT_TAG        v1.0.5
     GIT_SHALLOW    true)
 
 # Fetch character-related utilities
@@ -50,19 +50,19 @@ FetchContent_Declare(random
 # Fetch the hashing library
 FetchContent_Declare(libhash
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libhash.git
-    GIT_TAG        v1.0.5
+    GIT_TAG        v1.0.6
     GIT_SHALLOW    true)
 
 # Fetch the Key Derivation Function library
 FetchContent_Declare(libkdf
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libkdf.git
-    GIT_TAG        v1.0.5
+    GIT_TAG        v1.0.6
     GIT_SHALLOW    true)
 
 # Fetch the Logger library
 FetchContent_Declare(logger
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/logger.git
-    GIT_TAG        v1.0.3
+    GIT_TAG        v1.0.4
     GIT_SHALLOW    true)
 
 # If not installing aescrypt_engine, turn off installation for dependencies
