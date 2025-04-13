@@ -131,7 +131,7 @@ Encryptor::Encryptor(const Logger::LoggerPointer &parent_logger,
     instance{instance},
     active{false},
     cancelled{false},
-    modulo{},
+    read_length{},
     octets_consumed{},
     progress_octets{}
 {
@@ -155,7 +155,7 @@ Encryptor::Encryptor(const Logger::LoggerPointer &parent_logger,
  */
 Encryptor::~Encryptor()
 {
-    SecUtil::SecureErase(modulo);
+    SecUtil::SecureErase(read_length);
     SecUtil::SecureErase(octets_consumed);
     SecUtil::SecureErase(progress_octets);
 }
@@ -824,8 +824,8 @@ EncryptResult Encryptor::WriteSessionData(
  *  Description:
  *      This function will encrypt the source stream, writing the ciphertext
  *      to the output stream.  Once the final block is of input data is read,
- *      a modulo octet will be written, followed by an HMAC to guarantee
- *      the integrity of the data.
+ *      padding octets will be appended per PKCS#7 and and an HMAC is appended
+ *      to the ciphertext to guarantee the integrity of the data.
  *
  *  Parameters:
  *      source [in]
@@ -888,10 +888,10 @@ EncryptResult Encryptor::EncryptStream(
         // Copy the IV into the ciphertext buffer
         std::copy(iv.begin(), iv.end(), ciphertext.begin());
 
-        // Initialize the consumed / progress counters, modulo
+        // Initialize the consumed / progress counters, read_length
         octets_consumed = 0;
         progress_octets = 0;
-        modulo = 0;
+        read_length = 0;
 
         // Issue progress callback (facilitate initial rendering)
         if ((progress_interval > 0) && progress_callback)
@@ -911,14 +911,14 @@ EncryptResult Encryptor::EncryptStream(
             }
 
             // Get the number of octets read (which may be zero)
-            modulo = static_cast<std::uint8_t>(source.gcount());
+            read_length = static_cast<std::uint8_t>(source.gcount());
 
             // Update the counters with the number of octets read
-            progress_octets += modulo;
-            octets_consumed += modulo;
+            progress_octets += read_length;
+            octets_consumed += read_length;
 
             // If this is the final block, pad per PKCS#7 (RFC 5652)
-            if (modulo < 16)
+            if (read_length < 16)
             {
                 // This code should execute only at the end of the stream
                 if (!source.eof())
@@ -928,10 +928,10 @@ EncryptResult Encryptor::EncryptStream(
                     return EncryptResult::IOError;
                 }
 
-                // Pad with value 16 - modulo (i.e., number of padding octets)
-                std::fill(plaintext.data() + modulo,
+                // Pad with value 16 - read_length octets
+                std::fill(plaintext.data() + read_length,
                           plaintext.data() + plaintext.size(),
-                          16 - modulo);
+                          16 - read_length);
             }
 
             // Encrypt the block
