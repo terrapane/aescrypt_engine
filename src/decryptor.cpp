@@ -1188,7 +1188,7 @@ DecryptResult Decryptor::DecryptStream(
             return DecryptResult::AlteredMessage;
         }
 
-        // For stream version >= 3, the modulo is stored in the final block
+        // For stream version >= 3, the last block is padded
         if (stream_version >= 3)
         {
             // There MUST be a block of unwritten plaintext, else there was a
@@ -1201,7 +1201,7 @@ DecryptResult Decryptor::DecryptStream(
                 return DecryptResult::InvalidAESCryptStream;
             }
 
-            // Ensure the value is sane
+            // Ensure the padding value is sane
             if ((plaintext[15] == 0) || (plaintext[15] > 16))
             {
                 // Unexpected number octets remaining
@@ -1210,17 +1210,19 @@ DecryptResult Decryptor::DecryptStream(
                 return DecryptResult::InvalidAESCryptStream;
             }
 
-            // Extract the modulo value from the final octet in the array
+            // Determine the length of actual data in the final block
             reserved_modulo = 16 - plaintext[15];
 
-            // If the modulo is 0, it means the entire block is padding
+            // If the length is 0, it means the entire block is padding
             if (reserved_modulo == 0) plaintext_to_write = false;
         }
 
         // Write out any residual plaintext with respect to the modulo
         if (plaintext_to_write)
         {
-            // Final block size is the lower 4 bits of the modulo octet
+            // Final block size is the lower 4 bits of reserved_modulo; the
+            // modulo octet could be 0 with stream formats 0 to 2, indicating
+            // the entire final block is valid data
             std::size_t final_block_size =
                 ((reserved_modulo & 0x0f) == 0) ? 16 : (reserved_modulo & 0x0f);
 
