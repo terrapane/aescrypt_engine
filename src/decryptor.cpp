@@ -751,16 +751,34 @@ DecryptResult Decryptor::DeriveKey(const std::u8string &password,
         if (stream_version <= 2)
         {
             // KDF used in AES Crypt formats 0, 1, and 2
-            Crypto::KDF::ACKDF(pw, iv, key);
+            auto kdf_result = Crypto::KDF::ACKDF(pw, iv, key);
+
+            // Verify the key length
+            if (kdf_result.size() != key.size())
+            {
+                logger->error << "Unexpected key length returned from KDF"
+                              << std::flush;
+
+                return DecryptResult::InternalError;
+            }
         }
         else
         {
             // KDF used in AES Crypt formats 3 and onward
-            Crypto::KDF::PBKDF2(PBKDF2_Hash_Algorithm,
-                                pw,
-                                iv,
-                                kdf_iterations,
-                                key);
+            auto kdf_result = Crypto::KDF::PBKDF2(PBKDF2_Hash_Algorithm,
+                                                  pw,
+                                                  iv,
+                                                  kdf_iterations,
+                                                  key);
+
+            // Verify the key length
+            if (kdf_result.size() != key.size())
+            {
+                logger->error << "Unexpected key length returned from KDF"
+                              << std::flush;
+
+                return DecryptResult::InternalError;
+            }
         }
     }
     catch (const Crypto::KDF::KDFException &e)

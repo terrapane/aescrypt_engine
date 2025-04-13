@@ -627,13 +627,22 @@ EncryptResult Encryptor::DeriveKey(const std::u8string &password,
     try
     {
         // KDF used in AES Crypt formats 3 and onward
-        Crypto::KDF::PBKDF2(
+        auto kdf_result = Crypto::KDF::PBKDF2(
             PBKDF2_Hash_Algorithm,
             {reinterpret_cast<const std::uint8_t *>(password.data()),
              password.size()},
             iv,
             kdf_iterations,
             key);
+
+        // Check the returned key length
+        if (kdf_result.size() != key.size())
+        {
+            logger->error << "Unexpected key length returned from KDF"
+                          << std::flush;
+
+            return EncryptResult::InternalError;
+        }
     }
     catch (const Crypto::KDF::KDFException &e)
     {
