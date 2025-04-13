@@ -833,7 +833,7 @@ EncryptResult Encryptor::WriteSessionData(
  *  Description:
  *      This function will encrypt the source stream, writing the ciphertext
  *      to the output stream.  Once the final block is of input data is read,
- *      padding octets will be appended per PKCS#7 and and an HMAC is appended
+ *      padding octets will be appended per PKCS#7 and an HMAC is appended
  *      to the ciphertext to guarantee the integrity of the data.
  *
  *  Parameters:
