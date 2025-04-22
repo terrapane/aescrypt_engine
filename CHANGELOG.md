@@ -1,10 +1,11 @@
 # Change Log
 
-v4.0.11
+v4.1.0
 
 - Changed "modulo" in Encryptor to "read_length", as the term is a leftover from
   legacy behavior where a modulo octet was appended to the ciphertext
 - Revised comments in functions
+- Updated libaes and other library dependencies
 
 v4.0.10
 
