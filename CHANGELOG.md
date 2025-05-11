@@ -5,7 +5,9 @@ v4.1.0
 - Changed "modulo" in Encryptor to "read_length", as the term is a leftover from
   legacy behavior where a modulo octet was appended to the ciphertext
 - Revised comments in functions
-- Updated libaes and other library dependencies
+- Updated library dependencies
+- Use stricter compiler warnings
+- Fixed MSVC warnings
 
 v4.0.10
 

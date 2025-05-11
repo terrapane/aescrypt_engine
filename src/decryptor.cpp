@@ -630,6 +630,7 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
 {
     std::uint16_t extension_length{};
     std::uint8_t buffer[2]{};
+    DecryptResult result = DecryptResult::Success;
 
     // Since stream format version 0 & 1 did not use extensions, just return
     if (stream_version < 2) return DecryptResult::Success;
@@ -638,16 +639,16 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
     while (true)
     {
         // Read the extension length
-        auto result = ReadOctets(source, buffer);
+        result = ReadOctets(source, buffer);
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read extension header" << std::flush;
-            return result;
+            break;
         }
 
         // Put the extension length in host order
         extension_length = (static_cast<std::uint16_t>(buffer[0]) << 8) |
-                           (static_cast<std::uint16_t>(buffer[1])     );
+                           (static_cast<std::uint16_t>(buffer[1]));
 
         // If the extension length is 0, break out of the loop
         if (extension_length == 0) break;
@@ -659,7 +660,7 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
         if (!source.good())
         {
             // Assume the worst
-            DecryptResult result = DecryptResult::IOError;
+            result = DecryptResult::IOError;
 
             // If the end of the stream is reached, assume an invalid stream
             if (source.eof()) result = DecryptResult::InvalidAESCryptStream;
@@ -667,12 +668,11 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
             logger->error << "Failed skipping over extension: "
                           << result
                           << std::flush;
-
-            return result;
+            break;
         }
     }
 
-    return DecryptResult::Success;
+    return result;
 }
 
 /*

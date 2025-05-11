@@ -13,7 +13,7 @@ if(aescrypt_engine_BUILD_TESTS)
     # Fetch the Simple Test Framework library
     FetchContent_Declare(stf
         GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/stf.git
-        GIT_TAG        v1.0.1
+        GIT_TAG        v1.0.2
         GIT_SHALLOW    true)
 
     # It is not necessary to install the STF library
@@ -38,13 +38,13 @@ FetchContent_Declare(secutil
 # Fetch character-related utilities
 FetchContent_Declare(charutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/charutil.git
-    GIT_TAG        v1.0.2
+    GIT_TAG        v1.0.3
     GIT_SHALLOW    true)
 
 # Fetch the random generator library
 FetchContent_Declare(random
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/random.git
-    GIT_TAG        v1.0.1
+    GIT_TAG        v1.0.2
     GIT_SHALLOW    true)
 
 # Fetch the hashing library
@@ -62,7 +62,7 @@ FetchContent_Declare(libkdf
 # Fetch the Logger library
 FetchContent_Declare(logger
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/logger.git
-    GIT_TAG        v1.0.4
+    GIT_TAG        v1.0.5
     GIT_SHALLOW    true)
 
 # If not installing aescrypt_engine, turn off installation for dependencies
