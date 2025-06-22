@@ -1,7 +1,7 @@
 /*
  *  decryptor.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -20,6 +20,7 @@
 
 #include <climits>
 #include <algorithm>
+#include <array>
 #include <terra/aescrypt/engine/decryptor.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/secutil/secure_vector.h>
@@ -130,9 +131,9 @@ std::ostream &operator<<(std::ostream &o, const DecryptResult result)
  *  Comments:
  *      None.
  */
-Decryptor::Decryptor(const Logger::LoggerPointer &parent_logger,
+Decryptor::Decryptor(Logger::LoggerPointer parent_logger,
                      const std::string &instance) :
-    logger{std::make_shared<Logger::Logger>(parent_logger,
+    logger{std::make_shared<Logger::Logger>(std::move(parent_logger),
                                             CreateComponent("DEC", instance))},
     instance{instance},
     active{false},
@@ -629,7 +630,7 @@ DecryptResult Decryptor::ReadOctets(std::istream &source,
 DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
 {
     std::uint16_t extension_length{};
-    std::uint8_t buffer[2]{};
+    std::array<std::uint8_t, 2> buffer{};
     DecryptResult result = DecryptResult::Success;
 
     // Since stream format version 0 & 1 did not use extensions, just return
@@ -742,7 +743,7 @@ DecryptResult Decryptor::DeriveKey(const std::u8string &password,
     else
     {
         // Newer versions of AES Crypt use UTF-8 as the character encoding
-        std::copy(password.begin(), password.end(), std::back_inserter(pw));
+        std::ranges::copy(password, std::back_inserter(pw));
     }
 
     try
@@ -851,7 +852,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
         }
 
         // Copy the IV, as it will be over-written
-        std::copy(iv.begin(), iv.end(), plaintext_iv.begin());
+        std::ranges::copy(iv, plaintext_iv.begin());
 
         // Read the encrypted IV and key
         result = ReadOctets(source, iv_and_key);
@@ -985,7 +986,7 @@ DecryptResult Decryptor::DecryptStream(
 
     // Place the IV at the start of the ring buffer, as the oldest 16 octets
     // are used to XOR the current block to facilitate CBC mode
-    std::copy(iv.begin(), iv.end(), ring_buffer.begin());
+    std::ranges::copy(iv, ring_buffer.begin());
 
     // Assign the tail, head, and current_block variables; head after the IV
     tail = ring_buffer.data();
@@ -1144,13 +1145,13 @@ DecryptResult Decryptor::DecryptStream(
         if ((stream_version == 0) || (stream_version >= 3))
         {
             // Tail should be pointing to HMAC for these stream versions
-            std::copy(tail, tail + 16, expected_hmac.begin());
+            std::ranges::copy_n(tail, 16, expected_hmac.begin());
             tail += 16;
             if (tail == (ring_buffer.data() + ring_buffer.size()))
             {
                 tail = ring_buffer.data();
             }
-            std::copy(tail, tail + 16, expected_hmac.begin() + 16);
+            std::ranges::copy_n(tail, 16, expected_hmac.begin() + 16);
         }
         else
         {
@@ -1158,7 +1159,7 @@ DecryptResult Decryptor::DecryptStream(
             reserved_modulo = *tail;
 
             // Balance is HMAC data (this is the first 15 octets)
-            std::copy(tail + 1, tail + 16, expected_hmac.begin());
+            std::ranges::copy_n(tail + 1, 15, expected_hmac.begin());
             tail += 16;
             if (tail == (ring_buffer.data() + ring_buffer.size()))
             {
@@ -1166,7 +1167,7 @@ DecryptResult Decryptor::DecryptStream(
             }
 
             // Copy the next 16 octets (note only 15 octets copied so far)
-            std::copy(tail, tail + 16, expected_hmac.begin() + 15);
+            std::ranges::copy_n(tail, 16, expected_hmac.begin() + 15);
             tail += 16;
             if (tail == (ring_buffer.data() + ring_buffer.size()))
             {

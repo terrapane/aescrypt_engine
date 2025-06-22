@@ -1,5 +1,12 @@
 # Change Log
 
+v4.1.1
+
+- Upgraded library dependencies as a part of expanding support for additional
+  Unix-like platforms
+- Changed how the Logger object is passed to Encryptor and Decryptor
+- Replaced std::copy with std::ranges::copy (modernization change)
+
 v4.1.0
 
 - Changed "modulo" in Encryptor to "read_length", as the term is a leftover from

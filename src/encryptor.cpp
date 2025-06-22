@@ -1,7 +1,7 @@
 /*
  *  encryptor.cpp
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2025
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -124,9 +124,9 @@ std::ostream &operator<<(std::ostream &o, const EncryptResult result)
  *  Comments:
  *      None.
  */
-Encryptor::Encryptor(const Logger::LoggerPointer &parent_logger,
+Encryptor::Encryptor(Logger::LoggerPointer parent_logger,
                      const std::string &instance) :
-    logger{std::make_shared<Logger::Logger>(parent_logger,
+    logger{std::make_shared<Logger::Logger>(std::move(parent_logger),
                                             CreateComponent("ENC", instance))},
     instance{instance},
     active{false},
@@ -895,7 +895,7 @@ EncryptResult Encryptor::EncryptStream(
         Crypto::Cipher::AES aes(key);
 
         // Copy the IV into the ciphertext buffer
-        std::copy(iv.begin(), iv.end(), ciphertext.begin());
+        std::ranges::copy(iv, ciphertext.begin());
 
         // Initialize the consumed / progress counters, read_length
         octets_consumed = 0;
