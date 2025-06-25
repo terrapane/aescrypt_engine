@@ -6,6 +6,7 @@ v4.1.1
   Unix-like platforms
 - Changed how the Logger object is passed to Encryptor and Decryptor
 - Replaced std::copy with std::ranges::copy (modernization change)
+- Replaced pointers with index values in Decryptor
 
 v4.1.0
 

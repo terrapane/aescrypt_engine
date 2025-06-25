@@ -33,7 +33,7 @@
 #include "engine_common.h"
 
 // It is assumed a character is 8 bits; assumption used stream I/O
-static_assert(CHAR_BIT == 8);
+static_assert(CHAR_BIT == (1 << 3), "Characters are assumed to be 8 bits");
 
 namespace Terra::AESCrypt::Engine
 {
@@ -987,12 +987,26 @@ EncryptResult Encryptor::EncryptStream(
     }
     catch (const Crypto::Cipher::AESException &e)
     {
-        logger->critical << "AES Exception: " << e.what() << std::flush;
+        logger->critical << "AES Exception in Encryptor: " << e.what()
+                         << std::flush;
         return EncryptResult::InternalError;
     }
     catch (const Crypto::Hashing::HashException &e)
     {
-        logger->critical << "Hash Exception: " << e.what() << std::flush;
+        logger->critical << "Hash Exception in Encryptor: " << e.what()
+                         << std::flush;
+        return EncryptResult::InternalError;
+    }
+    catch (const std::exception &e)
+    {
+        logger->critical << "Unexpected internal error in Encryptor: "
+                         << e.what() << std::flush;
+        return EncryptResult::InternalError;
+    }
+    catch (...)
+    {
+        logger->critical << "Unexpected internal error in Encryptor"
+                         << std::flush;
         return EncryptResult::InternalError;
     }
 
