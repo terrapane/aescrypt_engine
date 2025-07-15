@@ -190,7 +190,8 @@ Encryptor::~Encryptor()
  *
  *      progress_callback [in]
  *          Optional callback function that will be called to deliver progress
- *          updates.
+ *          updates.  The callback will deliver the instance string and the
+ *          current number of octets processed.
  *
  *      progress_interval [in]
  *          The number of octets to read before placing a callback to deliver
@@ -851,7 +852,8 @@ EncryptResult Encryptor::WriteSessionData(
  *
  *      progress_callback [in]
  *          Optional callback function that will be called to deliver progress
- *          updates.
+ *          updates.  The callback will deliver the instance string and the
+ *          current number of octets processed.
  *
  *      progress_interval [in]
  *          The number of octets to read before placing a callback to deliver

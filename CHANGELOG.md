@@ -1,5 +1,9 @@
 # Change Log
 
+v4.1.1.1 (in progress; version TBD)
+
+- Minor cleanup in the code; revised comments
+
 v4.1.1
 
 - Upgraded library dependencies as a part of expanding support for additional

@@ -77,7 +77,7 @@ class Encryptor
 {
     public:
         using ProgressCallback =
-            std::function<void(const std::string &instance, std::size_t)>;
+            std::function<void(const std::string &, std::size_t)>;
 
         Encryptor(Logger::LoggerPointer parent_logger = {},
                   const std::string &instance = {});
