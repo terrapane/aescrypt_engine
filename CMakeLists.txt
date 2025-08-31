@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # Define the AES Crypt Engine project
 project(aescrypt_engine
-        VERSION 4.1.1.1
+        VERSION 4.1.2.0
         DESCRIPTION "AES Crypt Engine"
         LANGUAGES CXX)
 
@@ -19,12 +19,12 @@ option(aescrypt_engine_INSTALL "Install the AES Crypt Engine" ON)
 # Determine whether clang-tidy will be performed
 option(aescrypt_engine_CLANG_TIDY "Use clang-tidy to perform linting during build" OFF)
 
+# Ensure testing is enabled to surface tests in dependencies
+include(CTest)
+
 # Add the dependencies and source directories
 add_subdirectory(dependencies)
 add_subdirectory(src)
-
-# Include testing support (defines BUILD_TESTING)
-include(CTest)
 
 # Build tests if conditions are met
 if(BUILD_TESTING AND aescrypt_engine_BUILD_TESTS)

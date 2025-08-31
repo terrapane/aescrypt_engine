@@ -1,8 +1,10 @@
 # Change Log
 
-v4.1.1.1 (in progress; version TBD)
+v4.1.2
 
 - Minor cleanup in the code; revised comments
+- CMake changes to support downstream unit testing
+- Updated dependencies
 
 v4.1.1
 
