@@ -1,5 +1,10 @@
 # Change Log
 
+v4.1.3
+
+- CMake changes
+- Updated dependencies
+
 v4.1.2
 
 - Minor cleanup in the code; revised comments

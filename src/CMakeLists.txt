@@ -1,3 +1,6 @@
+# Include standard installation directory variables
+include(GNUInstallDirs)
+
 # Threading support is required
 find_package(Threads REQUIRED)
 
@@ -10,7 +13,8 @@ target_include_directories(aescrypt_engine
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     PUBLIC
-        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 # Specify the C++ standard to observe
 set_target_properties(aescrypt_engine
@@ -48,7 +52,6 @@ target_link_libraries(aescrypt_engine
 
 # Install target and associated include files
 if(aescrypt_engine_INSTALL)
-    include(GNUInstallDirs)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ TYPE INCLUDE)
     install(TARGETS aescrypt_engine EXPORT aescrypt_engineTargets ARCHIVE)
     install(EXPORT aescrypt_engineTargets
