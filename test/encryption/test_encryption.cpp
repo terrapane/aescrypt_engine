@@ -24,6 +24,8 @@
 #include <utility>
 #include <sstream>
 #include <string>
+#include <algorithm>
+#include <iterator>
 #include <terra/aescrypt/engine/decryptor.h>
 #include <terra/aescrypt/engine/encryptor.h>
 #include <terra/logger/null_ostream.h>
@@ -223,10 +225,10 @@ STF_TEST(TestEncryption, RandomStrings)
         // Create a string of this length
         std::size_t length = dist(rng);
 
-        for (std::size_t i = 0; i < length; i++)
-        {
-            plaintext += static_cast<char>(rchar(rng));
-        }
+        // Put "length" random characters in the string
+        std::generate_n(std::back_insert_iterator(plaintext),
+                        length,
+                        [&]() { return static_cast<char>(rchar(rng)); });
 
         {
             // Create an input stream over the ciphertext

@@ -2,6 +2,7 @@
 
 v4.1.3
 
+- Addressed compiler warnings on Windows
 - CMake changes
 - Updated dependencies
 

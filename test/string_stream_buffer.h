@@ -57,8 +57,8 @@ class StringStreamBuffer : public std::streambuf
         {
             if (dir == std::ios_base::cur)
             {
-                if (which & std::ios_base::in) gbump(off);
-                if (which & std::ios_base::out) pbump(off);
+                if (which & std::ios_base::in) gbump(static_cast<int>(off));
+                if (which & std::ios_base::out) pbump(static_cast<int>(off));
             }
             else if (dir == std::ios_base::end)
             {
@@ -68,7 +68,7 @@ class StringStreamBuffer : public std::streambuf
                 }
                 if (which & std::ios_base::out)
                 {
-                    pbump(epptr() - pptr() + off);
+                    pbump(static_cast<int>(epptr() - pptr() + off));
                 }
             }
             else if (dir == std::ios_base::beg)
@@ -79,7 +79,7 @@ class StringStreamBuffer : public std::streambuf
                 }
                 if (which & std::ios_base::out)
                 {
-                    pbump(pbase() - pptr() + off);
+                    pbump(static_cast<int>(pbase() - pptr() + off));
                 }
             }
 
