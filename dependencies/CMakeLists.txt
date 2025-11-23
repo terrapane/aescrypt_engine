@@ -26,7 +26,7 @@ endif()
 # Fetch the AES library
 FetchContent_Declare(libaes
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libaes.git
-    GIT_TAG        v1.1.3
+    GIT_TAG        v1.1.4
     GIT_SHALLOW    true)
 
 # Fetch security utilities library
@@ -50,13 +50,13 @@ FetchContent_Declare(random
 # Fetch the hashing library
 FetchContent_Declare(libhash
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libhash.git
-    GIT_TAG        v1.0.10
+    GIT_TAG        v1.0.11
     GIT_SHALLOW    true)
 
 # Fetch the Key Derivation Function library
 FetchContent_Declare(libkdf
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libkdf.git
-    GIT_TAG        v1.0.10
+    GIT_TAG        v1.0.11
     GIT_SHALLOW    true)
 
 # Fetch the Logger library

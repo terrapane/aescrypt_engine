@@ -1,5 +1,9 @@
 # Change Log
 
+v4.1.4
+
+- Updated dependencies
+
 v4.1.3
 
 - Addressed compiler warnings on Windows
