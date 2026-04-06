@@ -69,7 +69,7 @@ nn Octets - Extension identifier.  This is either a URI or an standard
             upon by software to contain accurate information.
 nn Octets - The contents of the extension
 .... End of repeating extension block section
- 4 octets - KDF iteration value (network byte order)
+ 4 Octets - KDF iteration value (network byte order)
 16 Octets - Initialization Vector (IV) used to encrypt the Session IV and
             Session Key
 48 Octets - Encrypted Session IV and 256-bit AES Session Key used to encrypt the

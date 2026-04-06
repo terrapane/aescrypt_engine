@@ -529,7 +529,7 @@ EncryptResult Encryptor::WriteExtensions(
             return EncryptResult::InvalidExtension;
         }
 
-        // Total length is the identifier \0 value
+        // Total length is the identifier || '\0' || value
         std::size_t length = identifier.size() + 1 + value.size();
 
         // Ensure the length is <= 65535
