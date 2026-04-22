@@ -305,7 +305,7 @@ EncryptResult Encryptor::Encrypt(
     random_generator.GetRandomOctets({session_iv.data(), session_iv.size()});
     random_generator.GetRandomOctets({session_key.data(), session_key.size()});
 
-    // Write the public salt and session data (private IV + key)
+    // Write the public salt and session data (session IV + key)
     result = WriteSessionData(destination,
                               password,
                               kdf_iterations,
@@ -759,7 +759,7 @@ EncryptResult Encryptor::WriteSessionData(
         // Create the AES object to perform encryption
         Crypto::Cipher::AES aes(key);
 
-        // Encrypt the private IV, add to HMAC, and write it out
+        // Encrypt the session IV, add to HMAC, and write it out
         XORBlock(session_iv, public_iv, ciphertext);
         aes.Encrypt(ciphertext, ciphertext);
         hmac.Input(ciphertext);
