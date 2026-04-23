@@ -39,14 +39,13 @@ class StringStreamBuffer : public std::streambuf
         }
 
         StringStreamBuffer(const std::string &buffer) :
-            StringStreamBuffer(
-                std::span<const char>(buffer.data(), buffer.size()))
+            StringStreamBuffer(std::span<const char>(buffer))
         {
         }
         StringStreamBuffer(const std::span<const std::uint8_t>(buffer)) :
-            StringStreamBuffer(std::span<const char>(
-                reinterpret_cast<const char *>(buffer.data()),
-                buffer.size()))
+            StringStreamBuffer(
+                std::span(reinterpret_cast<const char *>(buffer.data()),
+                          buffer.size()))
         {
         }
     protected:

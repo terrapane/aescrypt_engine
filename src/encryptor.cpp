@@ -262,8 +262,8 @@ EncryptResult Encryptor::Encrypt(
 
     // Ensure the UTF-8 sequence is valid
     if (!CharUtil::IsUTF8Valid(
-            {reinterpret_cast<const std::uint8_t *>(password.data()),
-             password.size()}))
+            std::span(reinterpret_cast<const std::uint8_t *>(password.data()),
+                      password.size())))
     {
         logger->error << "Password is not a valid UTF-8 sequence" << std::flush;
         return EncryptResult::InvalidPassword;
@@ -299,12 +299,12 @@ EncryptResult Encryptor::Encrypt(
         return result;
     }
 
-    // Create the public random IV
-    random_generator.GetRandomOctets({public_iv.data(), public_iv.size()});
+    // Create the random public IV
+    random_generator.GetRandomOctets(public_iv);
 
-    // Create a random IV + key (Session values)
-    random_generator.GetRandomOctets({session_iv.data(), session_iv.size()});
-    random_generator.GetRandomOctets({session_key.data(), session_key.size()});
+    // Create a random session IV and key
+    random_generator.GetRandomOctets(session_iv);
+    random_generator.GetRandomOctets(session_key);
 
     // Write the public salt and session data (session IV + key)
     result = WriteSessionData(destination,
@@ -633,8 +633,8 @@ EncryptResult Encryptor::DeriveKey(const std::u8string &password,
         // KDF used in AES Crypt formats 3 and onward
         auto kdf_result = Crypto::KDF::PBKDF2(
             PBKDF2_Hash_Algorithm,
-            {reinterpret_cast<const std::uint8_t *>(password.data()),
-             password.size()},
+            std::span(reinterpret_cast<const std::uint8_t *>(password.data()),
+                      password.size()),
             iv,
             kdf_iterations,
             key);
@@ -725,7 +725,7 @@ EncryptResult Encryptor::WriteSessionData(
         return EncryptResult::InvalidIterations;
     }
 
-    // Write out the iterations value
+    // Write out the KDF iterations value in network byte order
     std::uint32_t iterations = Terra::BitUtil::NetworkByteOrder(kdf_iterations);
     destination.write(reinterpret_cast<const char *>(&iterations),
                       sizeof(iterations));
@@ -770,9 +770,7 @@ EncryptResult Encryptor::WriteSessionData(
         }
 
         // Do the same for the first half of the session key
-        XORBlock(std::span<const std::uint8_t, 16>(session_key.data(), 16),
-                 ciphertext,
-                 ciphertext);
+        XORBlock(std::span(session_key).first<16>(), ciphertext, ciphertext);
         aes.Encrypt(ciphertext, ciphertext);
         hmac.Input(ciphertext);
         destination.write(reinterpret_cast<const char *>(ciphertext.data()),
@@ -784,7 +782,7 @@ EncryptResult Encryptor::WriteSessionData(
         }
 
         // Do the same for the second half of the session key
-        XORBlock(std::span<const std::uint8_t, 16>(session_key.data() + 16, 16),
+        XORBlock(std::span(session_key).subspan(16).first<16>(),
                  ciphertext,
                  ciphertext);
         aes.Encrypt(ciphertext, ciphertext);

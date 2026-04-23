@@ -238,8 +238,8 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
 
     // Ensure the UTF-8 sequence is valid
     if (!CharUtil::IsUTF8Valid(
-            {reinterpret_cast<const std::uint8_t *>(password.data()),
-             password.size()}))
+            std::span(reinterpret_cast<const std::uint8_t *>(password.data()),
+                      password.size())))
     {
         logger->error << "Password is not a valid UTF-8 sequence" << std::flush;
         return DecryptResult::InvalidPassword;
@@ -291,18 +291,17 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
     std::uint32_t kdf_iterations = 0;
     if (stream_version >= 3)
     {
-        std::uint32_t iterations{};
-        result = ReadOctets(source,
-                            std::span<std::uint8_t>(
-                                reinterpret_cast<std::uint8_t *>(&iterations),
-                                sizeof(iterations)));
+        result = ReadOctets(
+            source,
+            std::span(reinterpret_cast<std::uint8_t *>(&kdf_iterations),
+                      sizeof(kdf_iterations)));
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read iterations value" << std::flush;
             FinishedDecrypting();
             return result;
         }
-        kdf_iterations = Terra::BitUtil::NetworkByteOrder(iterations);
+        kdf_iterations = Terra::BitUtil::NetworkByteOrder(kdf_iterations);
         if ((kdf_iterations < PBKDF2_Min_Iterations) ||
             (kdf_iterations > PBKDF2_Max_Iterations))
         {
@@ -642,11 +641,10 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
         std::uint16_t extension_length{};
 
         // Read the extension length
-        result =
-            ReadOctets(source,
-                       std::span<std::uint8_t>(
-                           reinterpret_cast<std::uint8_t *>(&extension_length),
-                           sizeof(extension_length)));
+        result = ReadOctets(
+            source,
+            std::span(reinterpret_cast<std::uint8_t *>(&extension_length),
+                      sizeof(extension_length)));
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read extension header" << std::flush;
@@ -729,8 +727,8 @@ DecryptResult Decryptor::DeriveKey(const std::u8string &password,
 
         // Convert the UTF-8 string to UTF-16LE
         auto [success, length] = CharUtil::ConvertUTF8ToUTF16(
-            {reinterpret_cast<const std::uint8_t *>(password.data()),
-             password.size()},
+            std::span(reinterpret_cast<const std::uint8_t *>(password.data()),
+                      password.size()),
             pw,
             true);
 
@@ -870,30 +868,30 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
         // Update the HMAC
         hmac.Input(iv_and_key);
 
-        // Decrypt the first block, storying plaintext in IV
-        aes.Decrypt(std::span<std::uint8_t, 16>(iv_and_key.data(), 16), iv);
+        // Decrypt the first block, storing plaintext in IV
+        aes.Decrypt(std::span(iv_and_key).first<16>(), iv);
 
         // XOR the decrypted text with plaintext IV, storing the result in the
         // IV to be returned to the caller
         XORBlock(iv, plaintext_iv, iv);
 
         // Decrypt the next block into the first half of the key span
-        aes.Decrypt(std::span<std::uint8_t, 16>(iv_and_key.data() + 16, 16),
-                    std::span<std::uint8_t, 16>(key.data(), 16));
+        aes.Decrypt(std::span(iv_and_key).subspan(16).first<16>(),
+                    std::span(key).first<16>());
 
         // XOR the decrypted text with prior_block
-        XORBlock(std::span<std::uint8_t, 16>(key.data(), 16),
-                 std::span<std::uint8_t, 16>(iv_and_key.data(), 16),
-                 std::span<std::uint8_t, 16>(key.data(), 16));
+        XORBlock(std::span(key).first<16>(),
+                 std::span(iv_and_key).first<16>(),
+                 std::span(key).first<16>());
 
         // Decrypt the block into the second half of the key span
-        aes.Decrypt(std::span<std::uint8_t, 16>(iv_and_key.data() + 32, 16),
-                    std::span<std::uint8_t, 16>(key.data() + 16, 16));
+        aes.Decrypt(std::span(iv_and_key).subspan(32).first<16>(),
+                    std::span(key).subspan(16).first<16>());
 
         // XOR the decrypted text with prior_block
-        XORBlock(std::span<std::uint8_t, 16>(key.data() + 16, 16),
-                 std::span<std::uint8_t, 16>(iv_and_key.data() + 16, 16),
-                 std::span<std::uint8_t, 16>(key.data() + 16, 16));
+        XORBlock(std::span(key).subspan(16).first<16>(),
+                 std::span(iv_and_key).subspan(16).first<16>(),
+                 std::span(key).subspan(16).first<16>());
 
         // For version 3 and later, add the version octet to the HMAC
         if (stream_version >= 3) hmac.Input({&stream_version, 1});
@@ -1056,17 +1054,16 @@ DecryptResult Decryptor::DecryptStream(
             }
 
             // Add this block to the HMAC computation
-            hmac.Input({ring_buffer.data() + current_block, 16});
+            hmac.Input(std::span(ring_buffer).subspan(current_block, 16));
 
             // Decrypt the block, placing it in plaintext
             aes.Decrypt(
-                std::span<std::uint8_t, 16>(ring_buffer.data() + current_block,
-                                            16),
+                std::span(ring_buffer).subspan(current_block).first<16>(),
                 plaintext);
 
             // XOR the plaintext with the prior block located at tail (CBC mode)
             XORBlock(plaintext,
-                     std::span<std::uint8_t, 16>(ring_buffer.data() + tail, 16),
+                     std::span(ring_buffer).subspan(tail).first<16>(),
                      plaintext);
 
             // Note there is plaintext to write out
