@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <array>
 #include <terra/aescrypt/engine/encryptor.h>
+#include <terra/bitutil/byte_order.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/secutil/secure_vector.h>
 #include <terra/secutil/secure_array.h>
@@ -511,7 +512,7 @@ EncryptResult Encryptor::WriteExtensions(
     constexpr std::size_t Max_Extension_Length = 65535;
 
     // Array to hold an extension length in network byte order
-    std::array<char, 2> extension_length{};
+    std::uint16_t extension_length{};
 
     // Iterate over the extensions
     for (const auto &[identifier, value] : extensions)
@@ -536,11 +537,12 @@ EncryptResult Encryptor::WriteExtensions(
         if (length > 65535) return EncryptResult::InvalidExtension;
 
         // Assign the length in network byte order
-        extension_length[0] = static_cast<char>((length >> 8) & 0xff);
-        extension_length[1] = static_cast<char>((length     ) & 0xff);
+        extension_length = Terra::BitUtil::NetworkByteOrder(
+            static_cast<std::uint16_t>(length));
 
         // Write the extension length
-        destination.write(extension_length.data(), extension_length.size());
+        destination.write(reinterpret_cast<const char *>(&extension_length),
+                          sizeof(extension_length));
         if (!destination.good())
         {
             logger->error << "Error writing extension to output stream"
@@ -579,10 +581,11 @@ EncryptResult Encryptor::WriteExtensions(
     }
 
     // The final extension will be 0x0000
-    extension_length = {0x00, 0x00};
+    extension_length = 0;
 
     // Write the zero-length extension to indicate end of extensions
-    destination.write(extension_length.data(), extension_length.size());
+    destination.write(reinterpret_cast<const char *>(&extension_length),
+                      sizeof(extension_length));
     if (!destination.good())
     {
         logger->error << "Error writing extension to output stream"
@@ -707,14 +710,12 @@ EncryptResult Encryptor::WriteSessionData(
                         const std::span<std::uint8_t, 16> session_iv,
                         const std::span<std::uint8_t, 32> session_key)
 {
-    EncryptResult result{};
     SecUtil::SecureArray<std::uint8_t, 32> key;
     SecUtil::SecureArray<std::uint8_t, 32> computed_hmac;
     SecUtil::SecureArray<std::uint8_t, 16> ciphertext;
-    std::array<std::uint8_t, 4> iterations{};
 
     // Derive the encryption key to encrypt the session data
-    result = DeriveKey(password, kdf_iterations, public_iv, key);
+    EncryptResult result = DeriveKey(password, kdf_iterations, public_iv, key);
     if (result != EncryptResult::Success) return result;
 
     // If the KDF iterations is 0, report an error
@@ -725,12 +726,9 @@ EncryptResult Encryptor::WriteSessionData(
     }
 
     // Write out the iterations value
-    iterations[0] = (kdf_iterations >> 24) & 0xff;
-    iterations[1] = (kdf_iterations >> 16) & 0xff;
-    iterations[2] = (kdf_iterations >>  8) & 0xff;
-    iterations[3] = (kdf_iterations      ) & 0xff;
-    destination.write(reinterpret_cast<const char *>(iterations.data()),
-                      iterations.size());
+    std::uint32_t iterations = Terra::BitUtil::NetworkByteOrder(kdf_iterations);
+    destination.write(reinterpret_cast<const char *>(&iterations),
+                      sizeof(iterations));
     if (!destination.good())
     {
         logger->error << "Error writing iterations value" << std::flush;

@@ -1,5 +1,9 @@
 # Change Log
 
+v4.1.x (in progress)
+
+- Use the BitUtil library for byte ordering rather than doing it by hand
+
 v4.1.4
 
 - Updated dependencies

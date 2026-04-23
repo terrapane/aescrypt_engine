@@ -21,6 +21,7 @@
 #include <climits>
 #include <algorithm>
 #include <array>
+#include <terra/bitutil/byte_order.h>
 #include <terra/aescrypt/engine/decryptor.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/secutil/secure_vector.h>
@@ -290,18 +291,18 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
     std::uint32_t kdf_iterations = 0;
     if (stream_version >= 3)
     {
-        std::array<std::uint8_t, 4> iterations{};
-        result = ReadOctets(source, iterations);
+        std::uint32_t iterations{};
+        result = ReadOctets(source,
+                            std::span<std::uint8_t>(
+                                reinterpret_cast<std::uint8_t *>(&iterations),
+                                sizeof(iterations)));
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read iterations value" << std::flush;
             FinishedDecrypting();
             return result;
         }
-        kdf_iterations = (static_cast<std::uint32_t>(iterations[0]) << 24) |
-                         (static_cast<std::uint32_t>(iterations[1]) << 16) |
-                         (static_cast<std::uint32_t>(iterations[2]) <<  8) |
-                         (static_cast<std::uint32_t>(iterations[3])      );
+        kdf_iterations = Terra::BitUtil::NetworkByteOrder(iterations);
         if ((kdf_iterations < PBKDF2_Min_Iterations) ||
             (kdf_iterations > PBKDF2_Max_Iterations))
         {
@@ -630,8 +631,6 @@ DecryptResult Decryptor::ReadOctets(std::istream &source,
  */
 DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
 {
-    std::uint16_t extension_length{};
-    std::array<std::uint8_t, 2> buffer{};
     DecryptResult result = DecryptResult::Success;
 
     // Since stream format version 0 & 1 did not use extensions, just return
@@ -640,8 +639,14 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
     // Iterate over the extensions in the stream
     while (true)
     {
+        std::uint16_t extension_length{};
+
         // Read the extension length
-        result = ReadOctets(source, buffer);
+        result =
+            ReadOctets(source,
+                       std::span<std::uint8_t>(
+                           reinterpret_cast<std::uint8_t *>(&extension_length),
+                           sizeof(extension_length)));
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read extension header" << std::flush;
@@ -649,8 +654,7 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
         }
 
         // Put the extension length in host order
-        extension_length = (static_cast<std::uint16_t>(buffer[0]) << 8) |
-                           (static_cast<std::uint16_t>(buffer[1]));
+        extension_length = Terra::BitUtil::NetworkByteOrder(extension_length);
 
         // If the extension length is 0, break out of the loop
         if (extension_length == 0) break;

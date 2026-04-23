@@ -41,6 +41,7 @@ target_compile_options(aescrypt_engine
 target_link_libraries(aescrypt_engine
     PRIVATE
         Terra::libaes
+        Terra::bitutil
         Terra::secutil
         Terra::charutil
         Terra::kdf

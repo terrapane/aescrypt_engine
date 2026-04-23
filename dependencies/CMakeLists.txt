@@ -29,6 +29,12 @@ FetchContent_Declare(libaes
     GIT_TAG        v1.1.4
     GIT_SHALLOW    true)
 
+# Fetch bit utilities library
+FetchContent_Declare(bitutil
+    GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/bitutil.git
+    GIT_TAG        v1.0.5
+    GIT_SHALLOW    true)
+
 # Fetch security utilities library
 FetchContent_Declare(secutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/secutil.git
