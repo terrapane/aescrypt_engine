@@ -624,7 +624,7 @@ EncryptResult Encryptor::WriteExtensions(
 EncryptResult Encryptor::DeriveKey(const std::u8string &password,
                                    const std::uint32_t kdf_iterations,
                                    const std::span<const std::uint8_t, 16> iv,
-                                   std::span<std::uint8_t, 32> key)
+                                   const std::span<std::uint8_t, 32> key)
 {
     logger->info << "Performing key derivation" << std::flush;
 
@@ -706,9 +706,9 @@ EncryptResult Encryptor::WriteSessionData(
                         std::ostream &destination,
                         const std::u8string &password,
                         const std::uint32_t kdf_iterations,
-                        const std::span<std::uint8_t, 16> public_iv,
-                        const std::span<std::uint8_t, 16> session_iv,
-                        const std::span<std::uint8_t, 32> session_key)
+                        const std::span<const std::uint8_t, 16> public_iv,
+                        const std::span<const std::uint8_t, 16> session_iv,
+                        const std::span<const std::uint8_t, 32> session_key)
 {
     SecUtil::SecureArray<std::uint8_t, 32> key;
     SecUtil::SecureArray<std::uint8_t, 32> computed_hmac;

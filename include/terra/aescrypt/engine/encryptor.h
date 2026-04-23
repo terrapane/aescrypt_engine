@@ -103,14 +103,14 @@ class Encryptor
         EncryptResult DeriveKey(const std::u8string &password,
                                 const std::uint32_t iterations,
                                 const std::span<const std::uint8_t, 16> iv,
-                                std::span<std::uint8_t, 32> key);
+                                const std::span<std::uint8_t, 32> key);
         EncryptResult WriteSessionData(
                                 std::ostream &destination,
                                 const std::u8string &password,
                                 const std::uint32_t kdf_iterations,
-                                const std::span<std::uint8_t, 16> public_iv,
-                                const std::span<std::uint8_t, 16> session_iv,
-                                const std::span<std::uint8_t, 32> session_key);
+                                const std::span<const std::uint8_t, 16> public_iv,
+                                const std::span<const std::uint8_t, 16> session_iv,
+                                const std::span<const std::uint8_t, 32> session_key);
         EncryptResult EncryptStream(std::istream &source,
                                     std::ostream &destination,
                                     const std::span<const std::uint8_t, 16> iv,

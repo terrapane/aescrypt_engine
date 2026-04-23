@@ -98,7 +98,7 @@ static inline std::string CreateComponent(const std::string &component,
  */
 constexpr void XORBlock(const std::span<const std::uint8_t, 16> a,
                         const std::span<const std::uint8_t, 16> b,
-                        std::span<std::uint8_t, 16> result)
+                        const std::span<std::uint8_t, 16> result)
 {
     result[0]  = a[0]  ^ b[0];
     result[1]  = a[1]  ^ b[1];

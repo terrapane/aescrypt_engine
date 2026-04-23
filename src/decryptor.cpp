@@ -583,7 +583,7 @@ DecryptResult Decryptor::DetermineVersion(std::istream &source)
  *      None.
  */
 DecryptResult Decryptor::ReadOctets(std::istream &source,
-                                    std::span<std::uint8_t> octets)
+                                    const std::span<std::uint8_t> octets)
 {
     // Read octets from the source stream
     source.read(reinterpret_cast<char *>(octets.data()),
@@ -715,7 +715,7 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
 DecryptResult Decryptor::DeriveKey(const std::u8string &password,
                                    const std::uint32_t kdf_iterations,
                                    const std::span<const std::uint8_t, 16> iv,
-                                   std::span<std::uint8_t, 32> key)
+                                   const std::span<std::uint8_t, 32> key)
 {
     SecUtil::SecureVector<std::uint8_t> pw;
 
@@ -831,8 +831,8 @@ DecryptResult Decryptor::DeriveKey(const std::u8string &password,
  *      None.
  */
 DecryptResult Decryptor::GetSessionKey(std::istream &source,
-                                       std::span<std::uint8_t, 16> iv,
-                                       std::span<std::uint8_t, 32> key)
+                                       const std::span<std::uint8_t, 16> iv,
+                                       const std::span<std::uint8_t, 32> key)
 {
     SecUtil::SecureArray<std::uint8_t, 48> iv_and_key;
     SecUtil::SecureArray<std::uint8_t, 16> plaintext_iv;

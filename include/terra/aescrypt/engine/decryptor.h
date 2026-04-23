@@ -96,15 +96,15 @@ class Decryptor
         void FinishedDecrypting();
         DecryptResult DetermineVersion(std::istream &source);
         DecryptResult ReadOctets(std::istream &source,
-                                 std::span<std::uint8_t> octets);
+                                 const std::span<std::uint8_t> octets);
         DecryptResult ConsumeExtensions(std::istream &source);
         DecryptResult DeriveKey(const std::u8string &password,
                                 const std::uint32_t kdf_iterations,
                                 const std::span<const std::uint8_t, 16> iv,
-                                std::span<std::uint8_t, 32> key);
+                                const std::span<std::uint8_t, 32> key);
         DecryptResult GetSessionKey(std::istream &source,
-                                    std::span<std::uint8_t, 16> iv,
-                                    std::span<std::uint8_t, 32> key);
+                                    const std::span<std::uint8_t, 16> iv,
+                                    const std::span<std::uint8_t, 32> key);
         DecryptResult DecryptStream(std::istream &source,
                                     std::ostream &destination,
                                     const std::span<const std::uint8_t, 16> iv,
