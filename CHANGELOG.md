@@ -5,7 +5,7 @@ v4.1.x (in progress)
 - Use the BitUtil library for byte ordering rather than doing it by hand
 - Reduced use of pointer arithmetic with spans
 - Add const to some formal parameters using span that should have been const
-- Improved handling of read and writes to streams
+- Improved handling of stream reads and writes
 
 v4.1.4
 

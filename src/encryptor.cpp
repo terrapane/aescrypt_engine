@@ -935,9 +935,8 @@ EncryptResult Encryptor::EncryptStream(
                 }
 
                 // Pad with value 16 - read_length octets
-                std::fill(plaintext.data() + read_length,
-                          plaintext.data() + plaintext.size(),
-                          static_cast<std::uint8_t>(16 - read_length));
+                std::ranges::fill(std::span(plaintext).subspan(read_length),
+                                  static_cast<std::uint8_t>(16 - read_length));
             }
 
             // Encrypt the block

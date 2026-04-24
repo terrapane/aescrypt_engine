@@ -1072,7 +1072,9 @@ DecryptResult Decryptor::DecryptStream(
         }
 
         // Attempt to read 48 octets into the ring buffer
-        source.read(reinterpret_cast<char *>(ring_buffer.data() + head), 48);
+        source.read(reinterpret_cast<char *>(
+                        std::data(std::span(ring_buffer).subspan(head))),
+                    48);
         if (source.bad() || (!source.good() && !source.eof()))
         {
             logger->error << "Error reading initial ciphertext" << std::flush;
@@ -1153,7 +1155,8 @@ DecryptResult Decryptor::DecryptStream(
             if (head == ring_buffer.size()) head = 0;
 
             // Attempt to read the next 16 octets
-            source.read(reinterpret_cast<char *>(ring_buffer.data() + head),
+            source.read(reinterpret_cast<char *>(
+                            std::data(std::span(ring_buffer).subspan(head))),
                         16);
             if (source.bad() || (!source.good() && !source.eof()))
             {
@@ -1190,13 +1193,13 @@ DecryptResult Decryptor::DecryptStream(
         if ((stream_version == 0) || (stream_version >= 3))
         {
             // Tail should be pointing to HMAC for these stream versions
-            std::ranges::copy_n(ring_buffer.data() + tail,
+            std::ranges::copy_n(std::span(ring_buffer).subspan(tail).begin(),
                                 16,
                                 expected_hmac.begin());
             tail = (tail + 16) % ring_buffer.size();
-            std::ranges::copy_n(ring_buffer.data() + tail,
+            std::ranges::copy_n(std::span(ring_buffer).subspan(tail).begin(),
                                 16,
-                                expected_hmac.begin() + 16);
+                                std::span(expected_hmac).subspan(16).begin());
         }
         else
         {
@@ -1204,15 +1207,16 @@ DecryptResult Decryptor::DecryptStream(
             reserved_modulo = ring_buffer.at(tail);
 
             // Balance is HMAC data (this is the first 15 octets)
-            std::ranges::copy_n(ring_buffer.data() + tail + 1,
-                                15,
-                                expected_hmac.begin());
+            std::ranges::copy_n(
+                std::span(ring_buffer).subspan(tail + 1).begin(),
+                15,
+                expected_hmac.begin());
             tail = (tail + 16) % ring_buffer.size();
 
             // Copy the next 16 octets (note only 15 octets copied so far)
-            std::ranges::copy_n(ring_buffer.data() + tail,
+            std::ranges::copy_n(std::span(ring_buffer).subspan(tail).begin(),
                                 16,
-                                expected_hmac.begin() + 15);
+                                std::span(expected_hmac).subspan(15).begin());
             tail = (tail + 16) % ring_buffer.size();
 
             // Finally, copy the last octet
