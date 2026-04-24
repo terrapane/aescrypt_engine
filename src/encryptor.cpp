@@ -21,6 +21,7 @@
 #include <climits>
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <terra/aescrypt/engine/encryptor.h>
 #include <terra/bitutil/byte_order.h>
 #include <terra/secutil/secure_erase.h>
@@ -35,6 +36,37 @@
 
 // It is assumed a character is 8 bits; assumption used stream I/O
 static_assert(CHAR_BIT == (1 << 3), "Characters are assumed to be 8 bits");
+
+namespace
+{
+
+// Helper functions to assist with code readability
+inline bool WriteData(std::ostream &destination, char data)
+{
+    destination.write(&data, 1);
+    return destination.good();
+}
+
+template<std::integral T>
+bool WriteData(std::ostream &destination, T value)
+{
+    // Numeric values are always written in network byte order
+    T big_endian = Terra::BitUtil::NetworkByteOrder(value);
+    destination.write(reinterpret_cast<const char *>(&big_endian), sizeof(T));
+    return destination.good();
+}
+
+template<std::ranges::contiguous_range R>
+    requires(std::is_trivially_copyable_v<std::ranges::range_value_t<R>> &&
+             sizeof(std::ranges::range_value_t<R>) == 1)
+bool WriteData(std::ostream &destination, const R &r)
+{
+    destination.write(reinterpret_cast<const char *>(std::data(r)),
+                      static_cast<std::streamsize>(std::size(r)));
+    return destination.good();
+}
+
+} // namespace
 
 namespace Terra::AESCrypt::Engine
 {
@@ -282,8 +314,7 @@ EncryptResult Encryptor::Encrypt(
     if (result != EncryptResult::Success) return result;
 
     // Write AES header
-    destination.write(aes_crypt_header.data(), aes_crypt_header.size());
-    if (!destination.good())
+    if (!WriteData(destination, aes_crypt_header))
     {
         logger->error << "Error writing AES Crypt header to output stream"
                       << std::flush;
@@ -511,9 +542,6 @@ EncryptResult Encryptor::WriteExtensions(
 {
     constexpr std::size_t Max_Extension_Length = 65535;
 
-    // Array to hold an extension length in network byte order
-    std::uint16_t extension_length{};
-
     // Iterate over the extensions
     for (const auto &[identifier, value] : extensions)
     {
@@ -536,14 +564,8 @@ EncryptResult Encryptor::WriteExtensions(
         // Ensure the length is <= 65535
         if (length > 65535) return EncryptResult::InvalidExtension;
 
-        // Assign the length in network byte order
-        extension_length = Terra::BitUtil::NetworkByteOrder(
-            static_cast<std::uint16_t>(length));
-
         // Write the extension length
-        destination.write(reinterpret_cast<const char *>(&extension_length),
-                          sizeof(extension_length));
-        if (!destination.good())
+        if (!WriteData(destination, static_cast<std::uint16_t>(length)))
         {
             logger->error << "Error writing extension to output stream"
                           << std::flush;
@@ -551,9 +573,7 @@ EncryptResult Encryptor::WriteExtensions(
         }
 
         // Write the actual extension identifier
-        destination.write(identifier.data(),
-                          static_cast<std::streamsize>(identifier.size()));
-        if (!destination.good())
+        if (!WriteData(destination, identifier))
         {
             logger->error << "Error writing extension to output stream"
                           << std::flush;
@@ -561,8 +581,7 @@ EncryptResult Encryptor::WriteExtensions(
         }
 
         // Write the \0 octet
-        destination.put('\0');
-        if (!destination.good())
+        if (!WriteData(destination, '\0'))
         {
             logger->error << "Error writing extension to output stream"
                           << std::flush;
@@ -570,9 +589,7 @@ EncryptResult Encryptor::WriteExtensions(
         }
 
         // Write the actual extension value
-        destination.write(value.data(),
-                          static_cast<std::streamsize>(value.size()));
-        if (!destination.good())
+        if (!WriteData(destination, value))
         {
             logger->error << "Error writing extension to output stream"
                           << std::flush;
@@ -580,13 +597,8 @@ EncryptResult Encryptor::WriteExtensions(
         }
     }
 
-    // The final extension will be 0x0000
-    extension_length = 0;
-
     // Write the zero-length extension to indicate end of extensions
-    destination.write(reinterpret_cast<const char *>(&extension_length),
-                      sizeof(extension_length));
-    if (!destination.good())
+    if (!WriteData(destination, static_cast<std::uint16_t>(0)))
     {
         logger->error << "Error writing extension to output stream"
                       << std::flush;
@@ -726,19 +738,14 @@ EncryptResult Encryptor::WriteSessionData(
     }
 
     // Write out the KDF iterations value in network byte order
-    std::uint32_t iterations = Terra::BitUtil::NetworkByteOrder(kdf_iterations);
-    destination.write(reinterpret_cast<const char *>(&iterations),
-                      sizeof(iterations));
-    if (!destination.good())
+    if (!WriteData(destination, kdf_iterations))
     {
         logger->error << "Error writing iterations value" << std::flush;
         return EncryptResult::IOError;
     }
 
     // Write out the public IV
-    destination.write(reinterpret_cast<const char *>(public_iv.data()),
-                      public_iv.size());
-    if (!destination.good())
+    if (!WriteData(destination, public_iv))
     {
         logger->error << "Error writing public IV" << std::flush;
         return EncryptResult::IOError;
@@ -761,9 +768,7 @@ EncryptResult Encryptor::WriteSessionData(
         XORBlock(session_iv, public_iv, ciphertext);
         aes.Encrypt(ciphertext, ciphertext);
         hmac.Input(ciphertext);
-        destination.write(reinterpret_cast<const char *>(ciphertext.data()),
-                          ciphertext.size());
-        if (!destination.good())
+        if (!WriteData(destination, ciphertext))
         {
             logger->error << "Error writing session IV" << std::flush;
             return EncryptResult::IOError;
@@ -773,9 +778,7 @@ EncryptResult Encryptor::WriteSessionData(
         XORBlock(std::span(session_key).first<16>(), ciphertext, ciphertext);
         aes.Encrypt(ciphertext, ciphertext);
         hmac.Input(ciphertext);
-        destination.write(reinterpret_cast<const char *>(ciphertext.data()),
-                          ciphertext.size());
-        if (!destination.good())
+        if (!WriteData(destination, ciphertext))
         {
             logger->error << "Error writing session key" << std::flush;
             return EncryptResult::IOError;
@@ -787,9 +790,7 @@ EncryptResult Encryptor::WriteSessionData(
                  ciphertext);
         aes.Encrypt(ciphertext, ciphertext);
         hmac.Input(ciphertext);
-        destination.write(reinterpret_cast<const char *>(ciphertext.data()),
-                          ciphertext.size());
-        if (!destination.good())
+        if (!WriteData(destination, ciphertext))
         {
             logger->error << "Error writing session key" << std::flush;
             return EncryptResult::IOError;
@@ -802,9 +803,7 @@ EncryptResult Encryptor::WriteSessionData(
         // Finalize the HMAC and write it to the stream
         hmac.Finalize();
         hmac.Result(computed_hmac);
-        destination.write(reinterpret_cast<const char *>(computed_hmac.data()),
-                          computed_hmac.size());
-        if (!destination.good())
+        if (!WriteData(destination, computed_hmac))
         {
             logger->error << "Error writing session HMAC" << std::flush;
             return EncryptResult::IOError;
@@ -945,9 +944,7 @@ EncryptResult Encryptor::EncryptStream(
             XORBlock(plaintext, ciphertext, ciphertext);
             aes.Encrypt(ciphertext, ciphertext);
             hmac.Input(ciphertext);
-            destination.write(reinterpret_cast<const char *>(ciphertext.data()),
-                              ciphertext.size());
-            if (!destination.good())
+            if (!WriteData(destination, ciphertext))
             {
                 logger->error << "Error writing ciphertext" << std::flush;
                 return EncryptResult::IOError;
@@ -975,9 +972,7 @@ EncryptResult Encryptor::EncryptStream(
         // Finalize the HMAC and write it to the destination stream
         hmac.Finalize();
         hmac.Result(computed_hmac);
-        destination.write(reinterpret_cast<const char *>(computed_hmac.data()),
-                          computed_hmac.size());
-        if (!destination.good())
+        if (!WriteData(destination, computed_hmac))
         {
             logger->error << "Error writing final HMAC" << std::flush;
             return EncryptResult::IOError;

@@ -271,7 +271,7 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
     }
 
     // Read the reserved octet (this is the modulo octet in version 0)
-    result = ReadOctets(source, {&reserved_modulo, 1});
+    result = ReadData(source, reserved_modulo);
     if (result != DecryptResult::Success)
     {
         FinishedDecrypting();
@@ -291,17 +291,13 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
     std::uint32_t kdf_iterations = 0;
     if (stream_version >= 3)
     {
-        result = ReadOctets(
-            source,
-            std::span(reinterpret_cast<std::uint8_t *>(&kdf_iterations),
-                      sizeof(kdf_iterations)));
+        result = ReadData(source, kdf_iterations);
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read iterations value" << std::flush;
             FinishedDecrypting();
             return result;
         }
-        kdf_iterations = Terra::BitUtil::NetworkByteOrder(kdf_iterations);
         if ((kdf_iterations < PBKDF2_Min_Iterations) ||
             (kdf_iterations > PBKDF2_Max_Iterations))
         {
@@ -311,7 +307,7 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
     }
 
     // Read the public IV
-    result = ReadOctets(source, iv);
+    result = ReadData(source, iv);
     if (result != DecryptResult::Success)
     {
         logger->error << "Unable to read the public IV" << std::flush;
@@ -523,7 +519,7 @@ DecryptResult Decryptor::DetermineVersion(std::istream &source)
     std::array<std::uint8_t, 4> version_buffer{};
 
     // Read the first 4 octets of the stream ("AES" and version number)
-    auto result = ReadOctets(source, version_buffer);
+    auto result = ReadData(source, version_buffer);
     if (result != DecryptResult::Success)
     {
         logger->error << "Unable to determine stream version" << std::flush;
@@ -543,8 +539,9 @@ DecryptResult Decryptor::DetermineVersion(std::istream &source)
     stream_version = static_cast<std::uint8_t>(version_buffer[3]);
     if (stream_version > Latest_AES_Crypt_Stream_Version)
     {
-        logger->error << "Unsupported AES Crypt format version "
-                      << stream_version
+        logger->error << "Unsupported AES Crypt stream format (version "
+                      << static_cast<unsigned>(stream_version)
+                      << ")"
                       << std::flush;
         return DecryptResult::UnsupportedAESCryptVersion;
     }
@@ -553,7 +550,7 @@ DecryptResult Decryptor::DetermineVersion(std::istream &source)
 }
 
 /*
- *  Decryptor::ReadOctets()
+ *  Decryptor::ReadData()
  *
  *  Description:
  *      This function will read the specified number of octets from the input
@@ -575,14 +572,14 @@ DecryptResult Decryptor::DetermineVersion(std::istream &source)
  *          span.
  *
  *  Returns:
- *      A result of Success if the block was read without error or a non-success
+ *      A result of Success if the data was read without error or a non-success
  *      response if there was an error.
  *
  *  Comments:
  *      None.
  */
-DecryptResult Decryptor::ReadOctets(std::istream &source,
-                                    const std::span<std::uint8_t> octets)
+DecryptResult Decryptor::ReadData(std::istream &source,
+                                  const std::span<std::uint8_t> octets)
 {
     // Read octets from the source stream
     source.read(reinterpret_cast<char *>(octets.data()),
@@ -597,7 +594,7 @@ DecryptResult Decryptor::ReadOctets(std::istream &source,
         // If the end of the stream is reached, assume an invalid stream
         if (source.eof()) result = DecryptResult::InvalidAESCryptStream;
 
-        logger->error << "Failed reading octets: " << result << std::flush;
+        logger->error << "Failed reading stream: " << result << std::flush;
 
         return result;
     }
@@ -606,6 +603,70 @@ DecryptResult Decryptor::ReadOctets(std::istream &source,
     octets_consumed += octets.size();
 
     return DecryptResult::Success;
+}
+
+/*
+ *  Decryptor::ReadData()
+ *
+ *  Description:
+ *      This function will read an integral value from the source stream
+ *      and convert that to network byte order.
+ *
+ *  Parameters:
+ *      source [in]
+ *          The input stream from which to read the AES Crypt stream.
+ *
+ *      value [out]
+ *          The value to be read from the input stream.
+ *
+ *  Returns:
+ *      A result of Success if the value was read without error or a non-success
+ *      response if there was an error.
+ *
+ *  Comments:
+ *      None.
+ */
+template<std::integral T>
+    requires(sizeof(T) == 1)
+DecryptResult Decryptor::ReadData(std::istream &source, T &value)
+{
+    auto result = ReadData(
+        source,
+        {reinterpret_cast<std::uint8_t *>(&value), sizeof(T)});
+    return result;
+}
+
+/*
+ *  Decryptor::ReadData()
+ *
+ *  Description:
+ *      This function will read an integral value from the source stream
+ *      and convert that to network byte order.
+ *
+ *  Parameters:
+ *      source [in]
+ *          The input stream from which to read the AES Crypt stream.
+ *
+ *      value [out]
+ *          The value to be read from the input stream.
+ *
+ *  Returns:
+ *      A result of Success if the value was read without error or a non-success
+ *      response if there was an error.
+ *
+ *  Comments:
+ *      None.
+ */
+template<std::integral T>
+    requires(sizeof(T) > 1)
+DecryptResult Decryptor::ReadData(std::istream &source, T &value)
+{
+    T read_value;
+    auto result = ReadData(
+        source,
+        {reinterpret_cast<std::uint8_t *>(&read_value), sizeof(T)});
+    value = Terra::BitUtil::NetworkByteOrder(read_value);
+    return result;
 }
 
 /*
@@ -641,18 +702,12 @@ DecryptResult Decryptor::ConsumeExtensions(std::istream &source)
         std::uint16_t extension_length{};
 
         // Read the extension length
-        result = ReadOctets(
-            source,
-            std::span(reinterpret_cast<std::uint8_t *>(&extension_length),
-                      sizeof(extension_length)));
+        result = ReadData(source, extension_length);
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read extension header" << std::flush;
             break;
         }
-
-        // Put the extension length in host order
-        extension_length = Terra::BitUtil::NetworkByteOrder(extension_length);
 
         // If the extension length is 0, break out of the loop
         if (extension_length == 0) break;
@@ -858,7 +913,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
         std::ranges::copy(iv, plaintext_iv.begin());
 
         // Read the encrypted IV and key
-        result = ReadOctets(source, iv_and_key);
+        result = ReadData(source, iv_and_key);
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read encrypted IV & key" << std::flush;
@@ -901,7 +956,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
         hmac.Result(computed_hmac);
 
         // Read the expected HMAC value from the stream
-        result = ReadOctets(source, expected_hmac);
+        result = ReadData(source, expected_hmac);
         if (result != DecryptResult::Success)
         {
             logger->error << "Unable to read IV/Key HMAC" << std::flush;
@@ -997,7 +1052,8 @@ DecryptResult Decryptor::DecryptStream(
     // are used to XOR the current block to facilitate CBC mode
     std::ranges::copy(iv, ring_buffer.begin());
 
-    // Assign the tail, head, and current_block variables; head after the IV
+    // Assign the tail, head, and current_block index values into the ring
+    // buffer; head after the IV
     std::size_t tail = 0;
     std::size_t head = 16;
     std::size_t current_block = 16;

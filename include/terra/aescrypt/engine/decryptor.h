@@ -95,8 +95,14 @@ class Decryptor
         DecryptResult BeginDecrypting();
         void FinishedDecrypting();
         DecryptResult DetermineVersion(std::istream &source);
-        DecryptResult ReadOctets(std::istream &source,
-                                 const std::span<std::uint8_t> octets);
+        DecryptResult ReadData(std::istream &source,
+                               const std::span<std::uint8_t> octets);
+        template<std::integral T>
+            requires(sizeof(T) == 1)
+        DecryptResult ReadData(std::istream &source, T &value);
+        template<std::integral T>
+            requires(sizeof(T) > 1)
+        DecryptResult ReadData(std::istream &source, T &value);
         DecryptResult ConsumeExtensions(std::istream &source);
         DecryptResult DeriveKey(const std::u8string &password,
                                 const std::uint32_t kdf_iterations,
