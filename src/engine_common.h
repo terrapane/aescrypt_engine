@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <terra/crypto/hashing/hash.h>
+#include <terra/crypto/hash/hash.h>
 
 namespace
 {
@@ -38,8 +38,8 @@ constexpr std::size_t PBKDF2_Min_Iterations = 1;
 constexpr std::size_t PBKDF2_Max_Iterations = 5'000'000;
 
 // The hashing algorithm to employ with PBKDF2
-constexpr Terra::Crypto::Hashing::HashAlgorithm PBKDF2_Hash_Algorithm =
-    Terra::Crypto::Hashing::HashAlgorithm::SHA512;
+constexpr Terra::Crypto::Hash::HashAlgorithm PBKDF2_Hash_Algorithm =
+    Terra::Crypto::Hash::HashAlgorithm::SHA512;
 
 // Indicate the latest defined AES Crypt stream version
 constexpr std::uint8_t Latest_AES_Crypt_Stream_Version = 3;

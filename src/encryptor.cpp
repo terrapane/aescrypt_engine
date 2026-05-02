@@ -30,7 +30,7 @@
 #include <terra/charutil/character_utilities.h>
 #include <terra/random/random_generator.h>
 #include <terra/crypto/kdf/pbkdf.h>
-#include <terra/crypto/hashing/hmac.h>
+#include <terra/crypto/hash/hmac.h>
 #include <terra/crypto/cipher/aes.h>
 #include "engine_common.h"
 
@@ -754,7 +754,7 @@ EncryptResult Encryptor::WriteSessionData(
     try
     {
         // Prepare to calculate the HMAC
-        Crypto::Hashing::HMAC hmac(Crypto::Hashing::HashAlgorithm::SHA256, key);
+        Crypto::Hash::HMAC hmac(Crypto::Hash::HashAlgorithm::SHA256, key);
         if (hmac.GetHMACLength() != computed_hmac.size())
         {
             logger->critical << "HMAC length value is incorrect" << std::flush;
@@ -814,7 +814,7 @@ EncryptResult Encryptor::WriteSessionData(
         logger->critical << "AES Exception: " << e.what() << std::flush;
         return EncryptResult::InternalError;
     }
-    catch (const Crypto::Hashing::HashException &e)
+    catch (const Crypto::Hash::HashException &e)
     {
         logger->critical << "Hash Exception: " << e.what() << std::flush;
         return EncryptResult::InternalError;
@@ -881,7 +881,7 @@ EncryptResult Encryptor::EncryptStream(
     try
     {
         // Prepare to calculate the HMAC
-        Crypto::Hashing::HMAC hmac(Crypto::Hashing::HashAlgorithm::SHA256, key);
+        Crypto::Hash::HMAC hmac(Crypto::Hash::HashAlgorithm::SHA256, key);
         if (hmac.GetHMACLength() != computed_hmac.size())
         {
             logger->critical << "HMAC length value is incorrect" << std::flush;
@@ -983,7 +983,7 @@ EncryptResult Encryptor::EncryptStream(
                          << std::flush;
         return EncryptResult::InternalError;
     }
-    catch (const Crypto::Hashing::HashException &e)
+    catch (const Crypto::Hash::HashException &e)
     {
         logger->critical << "Hash Exception in Encryptor: " << e.what()
                          << std::flush;

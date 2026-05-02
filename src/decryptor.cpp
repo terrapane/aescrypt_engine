@@ -28,7 +28,7 @@
 #include <terra/secutil/secure_array.h>
 #include <terra/charutil/character_utilities.h>
 #include <terra/crypto/kdf/pbkdf.h>
-#include <terra/crypto/hashing/hmac.h>
+#include <terra/crypto/hash/hmac.h>
 #include <terra/crypto/cipher/aes.h>
 #include "engine_common.h"
 
@@ -902,7 +902,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
         Crypto::Cipher::AES aes(key);
 
         // The encrypted data is protected with an HMAC
-        Crypto::Hashing::HMAC hmac(Crypto::Hashing::HashAlgorithm::SHA256, key);
+        Crypto::Hash::HMAC hmac(Crypto::Hash::HashAlgorithm::SHA256, key);
         if (hmac.GetHMACLength() != computed_hmac.size())
         {
             logger->critical << "HMAC length value is incorrect" << std::flush;
@@ -975,7 +975,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
         logger->critical << "AES Exception: " << e.what() << std::flush;
         return DecryptResult::InternalError;
     }
-    catch (const Crypto::Hashing::HashException &e)
+    catch (const Crypto::Hash::HashException &e)
     {
         logger->critical << "Hash Exception: " << e.what() << std::flush;
         return DecryptResult::InternalError;
@@ -1064,7 +1064,7 @@ DecryptResult Decryptor::DecryptStream(
         Crypto::Cipher::AES aes(key);
 
         // The encrypted data is protected with an HMAC
-        Crypto::Hashing::HMAC hmac(Crypto::Hashing::HashAlgorithm::SHA256, key);
+        Crypto::Hash::HMAC hmac(Crypto::Hash::HashAlgorithm::SHA256, key);
         if (hmac.GetHMACLength() != computed_hmac.size())
         {
             logger->critical << "HMAC length value is incorrect" << std::flush;
@@ -1290,7 +1290,7 @@ DecryptResult Decryptor::DecryptStream(
                          << std::flush;
         return DecryptResult::InternalError;
     }
-    catch (const Crypto::Hashing::HashException &e)
+    catch (const Crypto::Hash::HashException &e)
     {
         logger->critical << "Hash Exception in Decryptor: " << e.what()
                          << std::flush;

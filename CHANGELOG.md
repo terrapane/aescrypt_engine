@@ -1,11 +1,12 @@
 # Change Log
 
-v4.1.x (in progress)
+v4.1.5
 
 - Use the BitUtil library for byte ordering rather than doing it by hand
 - Reduced use of pointer arithmetic with spans
 - Add const to some formal parameters using span that should have been const
 - Improved handling of stream reads and writes
+- Updated dependencies
 
 v4.1.4
 
