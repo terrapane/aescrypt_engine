@@ -229,7 +229,10 @@ DecryptResult Decryptor::Decrypt(const std::u8string &password,
         return DecryptResult::InvalidPassword;
     }
 
-    // Ensure the password is not too long
+    // Ensure the password is not too long; the reason for this constraint is
+    // that when decrypting legacy file formats, it might be necessary to
+    // convert passwords to UTF-16LE and so we assume the worst case where
+    // 1-character ASCII gets converted to 2-character UTF-16LE
     if (password.size() > (std::numeric_limits<std::size_t>::max() / 2))
     {
         logger->error << "Password is too long" << std::flush;
