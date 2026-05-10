@@ -87,7 +87,7 @@ The footprint of the stream is at least 155 octets.
 ```text
  3 Octets - "AES"
  1 Octet  - Version (0x02)
- 1 Octet  - Reserved (set to 0x00; modulo moved to end of stream)
+ 1 Octet  - Reserved (set to 0x00)
 .... Start of repeating extension block section
  2 Octet  - Length in octets (in network byte order) of an extension identifier
             and contents.  If 0x0000, then no further extensions exist and the
@@ -147,7 +147,7 @@ The footprint of the stream is at least 136 octets.
 ```text
  3 Octets - "AES"
  1 Octet  - Version (0x01)
- 1 Octet  - Reserved (set to 0x00; modulo moved to end of stream)
+ 1 Octet  - Reserved (set to 0x00)
 16 Octets - Initialization Vector (IV) used for encrypting the IV and symmetric
             key that is actually used to encrypt the bulk of the plaintext.
 48 Octets - Encrypted IV and 256-bit AES key used to encrypt the bulk of the
