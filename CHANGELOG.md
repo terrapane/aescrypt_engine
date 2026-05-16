@@ -6,6 +6,7 @@ v4.1.5
 - Reduced use of pointer arithmetic with spans
 - Add const to some formal parameters using span that should have been const
 - Improved handling of stream reads and writes
+- Addressed clang-tidy suggestions
 - Updated dependencies
 
 v4.1.4
@@ -28,13 +29,13 @@ v4.1.1
 
 - Upgraded library dependencies as a part of expanding support for additional
   Unix-like platforms
-- Changed how the Logger object is passed to Encryptor and Decryptor
-- Replaced std::copy with std::ranges::copy (modernization change)
-- Replaced pointers with index values in Decryptor
+- Changed how the Logger object is passed to `Encryptor` and `Decryptor`
+- Replaced `std::copy` with `std::ranges::copy` (modernization change)
+- Replaced pointers with index values in `Decryptor`
 
 v4.1.0
 
-- Changed "modulo" in Encryptor to "read_length", as the term is a leftover from
+- Changed "modulo" in `Encryptor` to "read_length", as the term is a leftover from
   legacy behavior where a modulo octet was appended to the ciphertext
 - Revised comments in functions
 - Updated library dependencies
