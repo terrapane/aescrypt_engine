@@ -60,7 +60,7 @@
 namespace Terra::AESCrypt::Engine
 {
 
-enum class EncryptResult
+enum class EncryptResult : std::uint8_t
 {
     Success,
     IOError,
@@ -79,9 +79,14 @@ class Encryptor
         using ProgressCallback =
             std::function<void(const std::string &, std::size_t)>;
 
-        Encryptor(Logger::LoggerPointer parent_logger = {},
-                  const std::string &instance = {});
-        virtual ~Encryptor();
+        explicit Encryptor(Logger::LoggerPointer parent_logger = {},
+                           const std::string &instance = {});
+        Encryptor(const Encryptor &other) = delete;
+        Encryptor(Encryptor &&other) = delete;
+        ~Encryptor();
+
+        Encryptor &operator=(const Encryptor &other) = delete;
+        Encryptor &operator=(Encryptor &&other) = delete;
 
         EncryptResult Encrypt(
             const std::u8string &password,
@@ -132,4 +137,4 @@ class Encryptor
 // Declare streaming operator for EncryptResult (useful for logging)
 std::ostream &operator<<(std::ostream &o, const EncryptResult result);
 
-} // namespace Terra::AESCrypt::engine
+} // namespace Terra::AESCrypt::Engine

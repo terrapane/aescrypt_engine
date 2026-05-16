@@ -53,12 +53,13 @@
 #include <mutex>
 #include <condition_variable>
 #include <cstdint>
+#include <concepts>
 #include <terra/logger/logger.h>
 
 namespace Terra::AESCrypt::Engine
 {
 
-enum class DecryptResult
+enum class DecryptResult : std::uint8_t
 {
     Success,
     InvalidAESCryptStream,
@@ -79,9 +80,14 @@ class Decryptor
         using ProgressCallback =
             std::function<void(const std::string &, std::size_t)>;
 
-        Decryptor(Logger::LoggerPointer parent_logger = {},
-                  const std::string &instance = {});
-        virtual ~Decryptor();
+        explicit Decryptor(Logger::LoggerPointer parent_logger = {},
+                           const std::string &instance = {});
+        Decryptor(const Decryptor &other) = delete;
+        Decryptor(Decryptor &&other) = delete;
+        ~Decryptor();
+
+        Decryptor &operator=(const Decryptor &other) = delete;
+        Decryptor &operator=(Decryptor &&other) = delete;
 
         DecryptResult Decrypt(const std::u8string &password,
                               std::istream &source,
@@ -97,11 +103,11 @@ class Decryptor
         DecryptResult DetermineVersion(std::istream &source);
         DecryptResult ReadData(std::istream &source,
                                const std::span<std::uint8_t> octets);
-        template<std::integral T>
-            requires(sizeof(T) == 1)
+        template<typename T>
+            requires std::integral<T> && (sizeof(T) == 1)
         DecryptResult ReadData(std::istream &source, T &value);
-        template<std::integral T>
-            requires(sizeof(T) > 1)
+        template<typename T>
+            requires std::integral<T> && (sizeof(T) > 1)
         DecryptResult ReadData(std::istream &source, T &value);
         DecryptResult ConsumeExtensions(std::istream &source);
         DecryptResult DeriveKey(const std::u8string &password,

@@ -23,7 +23,7 @@
 #include <string>
 #include <terra/crypto/hash/hash.h>
 
-namespace
+namespace Terra::AESCrypt::Engine
 {
 
 // Recommended number of PBKDF2 iterations to employ for AES Crypt stream
@@ -118,4 +118,4 @@ constexpr void XORBlock(const std::span<const std::uint8_t, 16> a,
     result[15] = a[15] ^ b[15];
 }
 
-} // namespace
+} // namespace Terra::AESCrypt::Engine

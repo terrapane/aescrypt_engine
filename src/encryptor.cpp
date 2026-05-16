@@ -18,24 +18,38 @@
  *      None.
  */
 
+#include <iostream>
 #include <climits>
 #include <algorithm>
 #include <array>
 #include <ranges>
+#include <concepts>
+#include <memory>
+#include <utility>
+#include <string>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <vector>
+#include <span>
+#include <mutex>
+#include <exception>
+#include <terra/logger/logger.h>
 #include <terra/aescrypt/engine/encryptor.h>
 #include <terra/bitutil/byte_order.h>
 #include <terra/secutil/secure_erase.h>
-#include <terra/secutil/secure_vector.h>
 #include <terra/secutil/secure_array.h>
 #include <terra/charutil/character_utilities.h>
 #include <terra/random/random_generator.h>
 #include <terra/crypto/kdf/pbkdf.h>
+#include <terra/crypto/kdf/kdf_exception.h>
 #include <terra/crypto/hash/hmac.h>
+#include <terra/crypto/hash/hash.h>
 #include <terra/crypto/cipher/aes.h>
 #include "engine_common.h"
 
 // It is assumed a character is 8 bits; assumption used stream I/O
-static_assert(CHAR_BIT == (1 << 3), "Characters are assumed to be 8 bits");
+static_assert(CHAR_BIT == 8, "Characters are assumed to be 8 bits");
 
 namespace
 {
@@ -47,7 +61,8 @@ inline bool WriteData(std::ostream &destination, char data)
     return destination.good();
 }
 
-template<std::integral T>
+template<typename T>
+    requires std::integral<T> && (sizeof(T) > 1)
 bool WriteData(std::ostream &destination, T value)
 {
     // Numeric values are always written in network byte order
@@ -56,9 +71,10 @@ bool WriteData(std::ostream &destination, T value)
     return destination.good();
 }
 
-template<std::ranges::contiguous_range R>
-    requires(std::is_trivially_copyable_v<std::ranges::range_value_t<R>> &&
-             sizeof(std::ranges::range_value_t<R>) == 1)
+template<typename R>
+    requires std::ranges::contiguous_range<R> &&
+             std::is_trivially_copyable_v<std::ranges::range_value_t<R>> &&
+             (sizeof(std::ranges::range_value_t<R>) == 1)
 bool WriteData(std::ostream &destination, const R &r)
 {
     destination.write(reinterpret_cast<const char *>(std::data(r)),
@@ -441,7 +457,7 @@ void Encryptor::Cancel()
  */
 bool Encryptor::Activate()
 {
-    std::lock_guard<std::mutex> lock(encryptor_mutex);
+    const std::lock_guard<std::mutex> lock(encryptor_mutex);
 
     // If there is an active encryption thread, fail
     if (active) return false;
@@ -471,7 +487,7 @@ bool Encryptor::Activate()
  */
 EncryptResult Encryptor::BeginEncrypting()
 {
-    std::lock_guard<std::mutex> lock(encryptor_mutex);
+    const std::lock_guard<std::mutex> lock(encryptor_mutex);
 
     // If the encryption object is in a cancelled state, just return
     if (cancelled) return EncryptResult::EncryptionCancelled;
@@ -506,7 +522,7 @@ EncryptResult Encryptor::BeginEncrypting()
  */
 void Encryptor::FinishedEncrypting()
 {
-    std::lock_guard<std::mutex> lock(encryptor_mutex);
+    const std::lock_guard<std::mutex> lock(encryptor_mutex);
 
     // Indicate that the thread is no longer encrypting
     active = false;
@@ -563,7 +579,7 @@ EncryptResult Encryptor::WriteExtensions(
         }
 
         // Total length is the identifier || '\0' || value
-        std::size_t length = identifier.size() + 1 + value.size();
+        const std::size_t length = identifier.size() + 1 + value.size();
 
         // Ensure the length is <= 65535
         if (length > 65535) return EncryptResult::InvalidExtension;
@@ -731,7 +747,7 @@ EncryptResult Encryptor::WriteSessionData(
     SecUtil::SecureArray<std::uint8_t, 16> ciphertext;
 
     // Derive the encryption key to encrypt the session data
-    EncryptResult result = DeriveKey(password, kdf_iterations, public_iv, key);
+    const EncryptResult result = DeriveKey(password, kdf_iterations, public_iv, key);
     if (result != EncryptResult::Success) return result;
 
     // If the KDF iterations is 0, report an error
@@ -766,7 +782,7 @@ EncryptResult Encryptor::WriteSessionData(
         }
 
         // Create the AES object to perform encryption
-        Crypto::Cipher::AES aes(key);
+        Crypto::Cipher::AES::AES aes(key);
 
         // Encrypt the session IV, add to HMAC, and write it out
         XORBlock(session_iv, public_iv, ciphertext);
@@ -813,7 +829,7 @@ EncryptResult Encryptor::WriteSessionData(
             return EncryptResult::IOError;
         }
     }
-    catch (const Crypto::Cipher::AESException &e)
+    catch (const Crypto::Cipher::AES::AESException &e)
     {
         logger->critical << "AES Exception: " << e.what() << std::flush;
         return EncryptResult::InternalError;
@@ -893,7 +909,7 @@ EncryptResult Encryptor::EncryptStream(
         }
 
         // Create the AES object to perform encryption
-        Crypto::Cipher::AES aes(key);
+        Crypto::Cipher::AES::AES aes(key);
 
         // Copy the IV into the ciphertext buffer
         std::ranges::copy(iv, ciphertext.begin());
@@ -981,7 +997,7 @@ EncryptResult Encryptor::EncryptStream(
             return EncryptResult::IOError;
         }
     }
-    catch (const Crypto::Cipher::AESException &e)
+    catch (const Crypto::Cipher::AES::AESException &e)
     {
         logger->critical << "AES Exception in Encryptor: " << e.what()
                          << std::flush;

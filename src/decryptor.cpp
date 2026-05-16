@@ -18,22 +18,38 @@
  *      None.
  */
 
+#include <iostream>
 #include <climits>
 #include <algorithm>
 #include <array>
-#include <terra/bitutil/byte_order.h>
+#include <concepts>
+#include <memory>
+#include <utility>
+#include <string>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <vector>
+#include <span>
+#include <mutex>
+#include <iterator>
+#include <exception>
+#include <terra/logger/logger.h>
 #include <terra/aescrypt/engine/decryptor.h>
+#include <terra/bitutil/byte_order.h>
 #include <terra/secutil/secure_erase.h>
 #include <terra/secutil/secure_vector.h>
 #include <terra/secutil/secure_array.h>
 #include <terra/charutil/character_utilities.h>
 #include <terra/crypto/kdf/pbkdf.h>
+#include <terra/crypto/kdf/kdf_exception.h>
 #include <terra/crypto/hash/hmac.h>
+#include <terra/crypto/hash/hash.h>
 #include <terra/crypto/cipher/aes.h>
 #include "engine_common.h"
 
 // It is assumed a character is 8 bits; assumption used stream I/O
-static_assert(CHAR_BIT == (1 << 3), "Characters are assumed to be 8 bits");
+static_assert(CHAR_BIT == 8, "Characters are assumed to be 8 bits");
 
 namespace Terra::AESCrypt::Engine
 {
@@ -422,7 +438,7 @@ void Decryptor::Cancel()
  */
 bool Decryptor::Activate()
 {
-    std::lock_guard<std::mutex> lock(decryptor_mutex);
+    const std::lock_guard<std::mutex> lock(decryptor_mutex);
 
     // If there is an active decryption thread, fail
     if (active) return false;
@@ -452,7 +468,7 @@ bool Decryptor::Activate()
  */
 DecryptResult Decryptor::BeginDecrypting()
 {
-    std::lock_guard<std::mutex> lock(decryptor_mutex);
+    const std::lock_guard<std::mutex> lock(decryptor_mutex);
 
     // If the decryption object is in a cancelled state, just return
     if (cancelled) return DecryptResult::DecryptionCancelled;
@@ -487,7 +503,7 @@ DecryptResult Decryptor::BeginDecrypting()
  */
 void Decryptor::FinishedDecrypting()
 {
-    std::lock_guard<std::mutex> lock(decryptor_mutex);
+    const std::lock_guard<std::mutex> lock(decryptor_mutex);
 
     // Indicate that the thread is no longer decrypting
     active = false;
@@ -629,8 +645,8 @@ DecryptResult Decryptor::ReadData(std::istream &source,
  *  Comments:
  *      None.
  */
-template<std::integral T>
-    requires(sizeof(T) == 1)
+template<typename T>
+    requires std::integral<T> && (sizeof(T) == 1)
 DecryptResult Decryptor::ReadData(std::istream &source, T &value)
 {
     auto result = ReadData(
@@ -660,8 +676,8 @@ DecryptResult Decryptor::ReadData(std::istream &source, T &value)
  *  Comments:
  *      None.
  */
-template<std::integral T>
-    requires(sizeof(T) > 1)
+template<typename T>
+    requires std::integral<T> && (sizeof(T) > 1)
 DecryptResult Decryptor::ReadData(std::istream &source, T &value)
 {
     T read_value;
@@ -902,7 +918,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
     try
     {
         // Newer streams use a session key encrypted with the derived key
-        Crypto::Cipher::AES aes(key);
+        Crypto::Cipher::AES::AES aes(key);
 
         // The encrypted data is protected with an HMAC
         Crypto::Hash::HMAC hmac(Crypto::Hash::HashAlgorithm::SHA256, key);
@@ -973,7 +989,7 @@ DecryptResult Decryptor::GetSessionKey(std::istream &source,
             return DecryptResult::AlteredMessage;
         }
     }
-    catch (const Crypto::Cipher::AESException &e)
+    catch (const Crypto::Cipher::AES::AESException &e)
     {
         logger->critical << "AES Exception: " << e.what() << std::flush;
         return DecryptResult::InternalError;
@@ -1064,7 +1080,7 @@ DecryptResult Decryptor::DecryptStream(
     try
     {
         // Create an AES object to perform decryption
-        Crypto::Cipher::AES aes(key);
+        Crypto::Cipher::AES::AES aes(key);
 
         // The encrypted data is protected with an HMAC
         Crypto::Hash::HMAC hmac(Crypto::Hash::HashAlgorithm::SHA256, key);
@@ -1178,7 +1194,7 @@ DecryptResult Decryptor::DecryptStream(
 
         // Determine how many octets remain in the ring buffer; if the head
         // and tail are equal, the buffer is empty
-        std::size_t buffer_octets =
+        const std::size_t buffer_octets =
             (head >= tail) ? (head - tail) : (ring_buffer.size() - tail + head);
 
         // Buffer should have 32 or 33 octets, depending on the stream version
@@ -1272,8 +1288,9 @@ DecryptResult Decryptor::DecryptStream(
             // Final block size is the lower 4 bits of reserved_modulo; the
             // modulo octet could be 0 with stream formats 0 to 2, indicating
             // the entire final block is valid data
-            std::size_t final_block_size =
-                ((reserved_modulo & 0x0f) == 0) ? 16 : (reserved_modulo & 0x0f);
+            const std::size_t final_block_size =
+                ((reserved_modulo & 0x0fU) == 0) ? 16 :
+                                                   (reserved_modulo & 0x0fU);
 
             // Write the plaintext to the output stream
             destination.write(reinterpret_cast<char *>(plaintext.data()),
@@ -1287,7 +1304,7 @@ DecryptResult Decryptor::DecryptStream(
             }
         }
     }
-    catch (const Crypto::Cipher::AESException &e)
+    catch (const Crypto::Cipher::AES::AESException &e)
     {
         logger->critical << "AES Exception in Decryptor: " << e.what()
                          << std::flush;
