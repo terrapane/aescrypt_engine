@@ -747,7 +747,8 @@ EncryptResult Encryptor::WriteSessionData(
     SecUtil::SecureArray<std::uint8_t, 16> ciphertext;
 
     // Derive the encryption key to encrypt the session data
-    const EncryptResult result = DeriveKey(password, kdf_iterations, public_iv, key);
+    const EncryptResult result =
+        DeriveKey(password, kdf_iterations, public_iv, key);
     if (result != EncryptResult::Success) return result;
 
     // If the KDF iterations is 0, report an error
