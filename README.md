@@ -34,18 +34,17 @@ that have no real value are just going to slow processing.
 
 ## Encryption
 
-When encrypting, one has the opportunity to provide a `kdf_iterations` value
-that can be used to make it more complex to guess the user's password.  See the
-Key Derivation section details that more.
+When encrypting, one can provide a `kdf_iterations` value that can be used to
+make it more complex to guess the user's password.  See the Key Derivation
+section details that more.
 
-It is also possible to provide a vector of "extensions", which are really just
-tag/value pairs that are inserted into the beginning of the file.  These
-extension values are not encrypted and are not protected from modification.
-They are just pieces of meta data that might be of interest to automated tools,
-but should not be relied upon to be accurate if there is a chance the file
-might have changed.  The reason they are not protected is that these were added
-at user's request to have a place to insert or change meta information
-after a file is created.
+It is also possible to provide a vector of "extensions", which are tag/value
+pairs that are inserted into the beginning of the file.  These extension values
+are not encrypted and are not protected from modification. They are just pieces
+of meta data that might be of interest to automated tools but should not be
+relied upon to be accurate if there is a chance the file might have changed.
+The reason they are not protected is that these were added at user's request to
+have a place to insert or change meta information after a file is created.
 
 ## Decryption
 
@@ -61,17 +60,17 @@ Transforming the user-provided password to a key suitable for encryption uses
 the FIPS-recommended PBKDF2 algorithm utilizing SHA-512 as the hashing
 algorithm.  An important consideration is the number of hashing iterations.
 
-If the "password" is actually a random value with at least 256 bits or more of
+If the "password" is a random value with at least 256 bits or more of
 entropy, a single iteration would be sufficient.  If using a password, far more
 iterations are recommended.
 
 While the number of iterations is not precisely the time required to perform
 a hash operation, it is a close approximation.  An iteration involves a bit more
-work, but the hash is the most significant part of the time required.  So for
+work, but the hash is the most significant part of the time required.  For
 simplicity, we will assume for this discussion that one iteration is equal to
 one hash operation.
 
-Tests on an Nvidia 4090 GPU shows an ability to perform about 8.6 billion hashes
+Tests on an Nvidia 4090 GPU show an ability to perform about 8.6 billion hashes
 per second using SHA-256 and 3.2 billion hashes per second using SHA-512.  For
 this reason (and similar differences on other hardware), SHA-512 is used as
 the hashing algorithm.
@@ -88,31 +87,31 @@ from a set of 62 possible values: A-Z, a-z, and 0-9.  Obviously, using
 additional characters in the selection of random values further increases the
 total entropy.
 
-Let's assume one has a "random" password of 12 characters of of the 62 possible
+Let's assume one has a "random" password of 12-characters of of the 62 possible
 values.  This would represent log2(62) = 5.95 bits of entropy * 12 = 71.45 total
 bits of entropy.  So a password cracking machine would need to enumerate through
 a maximum of 2^71.45 (or 3.23 x 10^21) values to guess all possible values.
 (One arrives at the same value via 62^12, if you prefer to look at it using that
 approach.)
 
-If using a single hash iteration and this 12 character password, it would
+If using a single hash iteration and this 12-character password, it would
 take about 32,000 years to test all possible values given the above data
 ([math](https://www.wolframalpha.com/input?i=2%5E%28log2%2862%29*12%29+%2F+3.2%C3%9710%5E9+%2F+3.154x10%5E7+years)).
 
 However, if using a cluster of 100 GPUs, this time is reduced to less than 320
 years ([math](https://www.wolframalpha.com/input?i=2%5E%28log2%2862%29*12%29+%2F+3.2%C3%9710%5E11+%2F+3.154x10%5E7+years)).
 Likewise, using a cluster of 1000 brings the time down to 3.2 years.  Obviously,
-that is not an acceptable value.  Thus iterations must be higher for shorter
+that is an unacceptable value.  Thus, iterations must be higher for shorter
 or non-random passwords.
 
 It's important to note that increasing the password length to 16 characters
 for the above single GPU scenario increases the number of years to crack to
-4.7 billions ([math](https://www.wolframalpha.com/input?i=2%5E%28log2%2862%29*16%29+%2F+3.2%C3%9710%5E11+%2F+3.154x10%5E7+years)).
+4.7 billion ([math](https://www.wolframalpha.com/input?i=2%5E%28log2%2862%29*16%29+%2F+3.2%C3%9710%5E11+%2F+3.154x10%5E7+years)).
 
 Obviously, if the password is easier to guess or even more GPUs are employed,
 this time can be reduced even further.  If a password is known to be exactly 12
-characters, for example, then the all possible values less than that can
-be removed from consideration.
+characters, for example, then all possible values less than that can be removed
+from consideration.
 
 If the number of iterations is increased to 300,000 for that 12-character
 password, the time to "guess" increases to 10 billion years on a single GPU
@@ -123,12 +122,11 @@ While these numbers are not precise, understand that the measurements are also
 not precise.  There is some variability, but these numbers are just to provide
 a feel for the complexity and time.
 
-Since humans have a tendency to select passwords poorly, the amount of entropy
-is likely lower and the amount of guessing is reduced.  It's impossible to
-assume how long it might take to crack a poorly-chosen password.  The
-numbers discussed above are just the upper bound, given the known hashing
-rates.  It's also important to be mindful that hashing power increases
-every year.
+Since humans tend to select passwords poorly, the amount of entropy is likely
+lower, and the amount of guessing is reduced.  It's impossible to assume how
+long it might take to crack a poorly chosen password.  The numbers discussed
+above are just the upper bound, given the known hashing rates.  It's also
+important to be mindful that hashing power increases every year.
 
 In short, use `kdf_iterations` that makes it as difficult as possible to crack
 the password, while still consuming a tolerable amount of time.  If encrypting
@@ -138,11 +136,11 @@ a NAS wherein each is encrypted) may not be.  For the latter, it might be
 best to select a password that truly is a random sequence with more than
 256 bits of entropy and reduce the KDF iterations.  For example, a 43-character
 randomly selected password from a character set of 62 characters would yield
-256 bits of entropy (log2(62) * 43 ~= 256).  This 256 bits of entropy would be
+256 bits of entropy (log2(62) * 43 ~= 256).  Thus, 256 bits of entropy would be
 sufficient as input into the KDF with a single iteration, since the encryption
 key is 256 bits.  Using even longer random password strings or more iterations
-os fine.  The point was only to say that the iteration could safely be reduced
-with sufficiently long and truly random "password" strings in order to lower
+is fine.  The point was only to say that the iteration could safely be reduced
+with sufficiently long and truly random "password" strings to lower
 computational requirements when encrypting or decrypting.
 
 Related to this entire discussion, NIST Special Publication 800-132 (Dec 2010)
@@ -159,9 +157,9 @@ increases.
 Note that the KDF iterations value allowed is bounded between 1 (acceptable
 if the password is random data) and 5,000,000.  The upper bound is set to
 prevent users from being frustrated with extremely long delays in key
-derivation, and is arguably still too high.  One may modify `engine_common.h`
+derivation and is arguably still too high.  One may modify `engine_common.h`
 to increase this value, but it is not recommended just to ensure AES Crypt
 files remain interoperable.  The default value of 300,000 is higher than
-current industry recommendations (i.e., it is stronger than necessary, but
+current industry recommendations (i.e., it is stronger than necessary but
 still introduces an acceptable delay for encrypting/decrypting individual
 files).
