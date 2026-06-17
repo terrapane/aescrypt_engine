@@ -159,7 +159,7 @@ if the password is random data) and 5,000,000.  The upper bound is set to
 prevent users from being frustrated with extremely long delays in key
 derivation and is arguably still too high.  One may modify `engine_common.h`
 to increase this value, but it is not recommended just to ensure AES Crypt
-files remain interoperable.  The default value of 300,000 is higher than
+files remain interoperable.  The default value of 600,000 is higher than
 current industry recommendations (i.e., it is stronger than necessary but
 still introduces an acceptable delay for encrypting/decrypting individual
 files).
