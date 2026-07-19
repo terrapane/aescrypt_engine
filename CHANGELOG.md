@@ -1,5 +1,11 @@
 # Change Log
 
+v4.1.6
+
+- Updated dependencies
+- Using std::atomic to check for cancellation
+- Revised README
+
 v4.1.5
 
 - Use the BitUtil library for byte ordering rather than doing it by hand

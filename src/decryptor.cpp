@@ -406,7 +406,7 @@ void Decryptor::Cancel()
     std::unique_lock<std::mutex> lock(decryptor_mutex);
 
     // Indicate that the decryption thread should stop
-    cancelled = true;
+    cancelled.store(true, std::memory_order_relaxed);
 
     // If no longer decrypting, return
     if (!active) return;
@@ -444,7 +444,7 @@ bool Decryptor::Activate()
     if (active) return false;
 
     // Set the cancelled flag to false
-    cancelled = false;
+    cancelled.store(false, std::memory_order_relaxed);
 
     return true;
 }
@@ -471,7 +471,10 @@ DecryptResult Decryptor::BeginDecrypting()
     const std::lock_guard<std::mutex> lock(decryptor_mutex);
 
     // If the decryption object is in a cancelled state, just return
-    if (cancelled) return DecryptResult::DecryptionCancelled;
+    if (cancelled.load(std::memory_order_relaxed))
+    {
+        return DecryptResult::DecryptionCancelled;
+    }
 
     // If already decrypting, return an error response
     if (active) return DecryptResult::AlreadyDecrypting;
@@ -1147,7 +1150,7 @@ DecryptResult Decryptor::DecryptStream(
             plaintext_to_write = true;
 
             // If decryption is cancelled, return early
-            if (cancelled)
+            if (cancelled.load(std::memory_order_relaxed))
             {
                 logger->warning << "Decryption cancelled" << std::flush;
                 return DecryptResult::DecryptionCancelled;

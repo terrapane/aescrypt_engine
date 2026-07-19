@@ -51,6 +51,7 @@
 #include <span>
 #include <cstddef>
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
 #include <concepts>
@@ -127,7 +128,7 @@ class Decryptor
         Logger::LoggerPointer logger;
         std::string instance;
         bool active;
-        bool cancelled;
+        std::atomic<bool> cancelled;
         std::uint8_t stream_version;
         std::uint8_t reserved_modulo;
         std::size_t octets_consumed;

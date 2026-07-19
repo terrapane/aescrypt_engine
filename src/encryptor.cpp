@@ -425,7 +425,7 @@ void Encryptor::Cancel()
     std::unique_lock<std::mutex> lock(encryptor_mutex);
 
     // Indicate that the encryption thread should stop
-    cancelled = true;
+    cancelled.store(true, std::memory_order_relaxed);
 
     // If no longer encrypting, return
     if (!active) return;
@@ -463,7 +463,7 @@ bool Encryptor::Activate()
     if (active) return false;
 
     // Set the cancelled flag to false
-    cancelled = false;
+    cancelled.store(false, std::memory_order_relaxed);
 
     return true;
 }
@@ -490,7 +490,10 @@ EncryptResult Encryptor::BeginEncrypting()
     const std::lock_guard<std::mutex> lock(encryptor_mutex);
 
     // If the encryption object is in a cancelled state, just return
-    if (cancelled) return EncryptResult::EncryptionCancelled;
+    if (cancelled.load(std::memory_order_relaxed))
+    {
+        return EncryptResult::EncryptionCancelled;
+    }
 
     // If already encrypting, return an error response
     if (active) return EncryptResult::AlreadyEncrypting;
@@ -971,7 +974,7 @@ EncryptResult Encryptor::EncryptStream(
             }
 
             // If encryption is cancelled, return early
-            if (cancelled)
+            if (cancelled.load(std::memory_order_relaxed))
             {
                 logger->warning << "Encryption cancelled" << std::flush;
                 return EncryptResult::EncryptionCancelled;

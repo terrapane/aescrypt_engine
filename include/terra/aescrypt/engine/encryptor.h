@@ -53,6 +53,7 @@
 #include <utility>
 #include <cstddef>
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
 #include <terra/logger/logger.h>
@@ -126,7 +127,7 @@ class Encryptor
         Logger::LoggerPointer logger;
         std::string instance;
         bool active;
-        bool cancelled;
+        std::atomic<bool> cancelled;
         std::uint8_t read_length;
         std::size_t octets_consumed;
         std::size_t progress_octets;
