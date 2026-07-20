@@ -3,6 +3,8 @@
 v4.1.6
 
 - Updated dependencies
+- Stricter compiler warnings
+- Addressed type narrowing warnings
 - Using std::atomic to check for cancellation
 - Revised README
 
