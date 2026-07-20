@@ -1104,8 +1104,9 @@ DecryptResult Decryptor::DecryptStream(
         }
 
         // Update pointers / counters with octets consumed
-        octets_consumed += source.gcount();
-        head += source.gcount(); // This usually points one beyond the buffer
+        octets_consumed += static_cast<std::size_t>(source.gcount());
+        // The following usually points one octet beyond the buffer
+        head += static_cast<std::size_t>(source.gcount());
 
         // Initialize the progress_octets to drive progress callbacks
         progress_octets = octets_consumed;
@@ -1185,9 +1186,10 @@ DecryptResult Decryptor::DecryptStream(
                 logger->error << "Error reading ciphertext" << std::flush;
                 return DecryptResult::IOError;
             }
-            progress_octets += source.gcount();
-            octets_consumed += source.gcount();
-            head += source.gcount(); // This may point one beyond the buffer
+            progress_octets += static_cast<std::size_t>(source.gcount());
+            octets_consumed += static_cast<std::size_t>(source.gcount());
+            // The following may point one octet beyond the buffer
+            head += static_cast<std::size_t>(source.gcount());
         }
 
         // The tail would be pointing at the previous ciphertext block or the
