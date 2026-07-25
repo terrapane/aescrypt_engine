@@ -1105,6 +1105,7 @@ DecryptResult Decryptor::DecryptStream(
 
         // Update pointers / counters with octets consumed
         octets_consumed += static_cast<std::size_t>(source.gcount());
+
         // The following usually points one octet beyond the buffer
         head += static_cast<std::size_t>(source.gcount());
 
@@ -1247,7 +1248,7 @@ DecryptResult Decryptor::DecryptStream(
             expected_hmac[31] = ring_buffer.at(tail);
         }
 
-        // Compute the hmac
+        // Compute the HMAC
         hmac.Finalize();
         hmac.Result(computed_hmac);
 
