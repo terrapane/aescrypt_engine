@@ -34,6 +34,7 @@
 #include <mutex>
 #include <iterator>
 #include <exception>
+#include <atomic>
 #include <terra/logger/logger.h>
 #include <terra/aescrypt/engine/decryptor.h>
 #include <terra/bitutil/byte_order.h>

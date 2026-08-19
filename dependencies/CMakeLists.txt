@@ -13,7 +13,7 @@ if(aescrypt_engine_BUILD_TESTS)
     # Fetch the Simple Test Framework library
     FetchContent_Declare(stf
         GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/stf.git
-        GIT_TAG        v1.0.5
+        GIT_TAG        v1.0.6
         GIT_SHALLOW    true)
 
     # It is not necessary to install the STF library
@@ -26,49 +26,49 @@ endif()
 # Fetch the AES library
 FetchContent_Declare(libaes
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libaes.git
-    GIT_TAG        v1.1.6
+    GIT_TAG        v1.1.7
     GIT_SHALLOW    true)
 
 # Fetch bit utilities library
 FetchContent_Declare(bitutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/bitutil.git
-    GIT_TAG        v1.0.7
+    GIT_TAG        v1.0.8
     GIT_SHALLOW    true)
 
 # Fetch security utilities library
 FetchContent_Declare(secutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/secutil.git
-    GIT_TAG        v1.1.1
+    GIT_TAG        v1.1.2
     GIT_SHALLOW    true)
 
 # Fetch character-related utilities
 FetchContent_Declare(charutil
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/charutil.git
-    GIT_TAG        v1.0.7
+    GIT_TAG        v1.0.8
     GIT_SHALLOW    true)
 
 # Fetch the random generator library
 FetchContent_Declare(random
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/random.git
-    GIT_TAG        v1.0.7
+    GIT_TAG        v1.0.8
     GIT_SHALLOW    true)
 
 # Fetch the hashing library
 FetchContent_Declare(libhash
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libhash.git
-    GIT_TAG        v1.1.1
+    GIT_TAG        v1.1.2
     GIT_SHALLOW    true)
 
 # Fetch the Key Derivation Function library
 FetchContent_Declare(libkdf
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/libkdf.git
-    GIT_TAG        v1.1.1
+    GIT_TAG        v1.1.2
     GIT_SHALLOW    true)
 
 # Fetch the Logger library
 FetchContent_Declare(logger
     GIT_REPOSITORY ${TERRAPANE_SOURCE_URI}/logger.git
-    GIT_TAG        v1.1.0
+    GIT_TAG        v1.1.1
     GIT_SHALLOW    true)
 
 # If not installing aescrypt_engine, turn off installation for dependencies

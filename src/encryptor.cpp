@@ -34,6 +34,7 @@
 #include <span>
 #include <mutex>
 #include <exception>
+#include <atomic>
 #include <terra/logger/logger.h>
 #include <terra/aescrypt/engine/encryptor.h>
 #include <terra/bitutil/byte_order.h>
