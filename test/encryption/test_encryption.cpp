@@ -19,6 +19,9 @@
  *      None.
  */
 
+#include <istream>
+#include <cstddef>
+#include <cstdint>
 #include <random>
 #include <vector>
 #include <utility>
@@ -26,12 +29,17 @@
 #include <string>
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <terra/aescrypt/engine/decryptor.h>
 #include <terra/aescrypt/engine/encryptor.h>
 #include <terra/logger/null_ostream.h>
+#include <terra/logger/log_level.h>
 #include <terra/logger/logger.h>
 #include <terra/stf/stf.h>
 #include "../string_stream_buffer.h"
+
+namespace
+{
 
 using namespace Terra::AESCrypt::Engine;
 using namespace Terra::Logger;
@@ -87,7 +95,7 @@ STF_TEST(TestEncryption, StandardTestVectors)
 
     // Create a Logger object; chance null_ostream to std::cerr if debugging
     NullOStream null_ostream;
-    LoggerPointer logger =
+    const LoggerPointer logger =
         std::make_shared<Logger>(null_ostream, LogLevel::Debug);
 
     // Iterate over the test vector
@@ -130,7 +138,7 @@ STF_TEST(TestEncryption, StandardTestVectors)
             std::istream iss(&cipher_stream_buffer);
 
             // Decrypt the ciphertext
-            auto result = decryptor.Decrypt(password, iss, oss, 0);
+            auto result = decryptor.Decrypt(password, iss, oss);
             STF_ASSERT_EQ(DecryptResult::Success, result);
 
             // Ensure the output string length is the expected length
@@ -158,7 +166,7 @@ STF_TEST(TestEncryption, EncryptWithExtensions)
     Decryptor decryptor;
 
     // Define extensions
-    std::vector<std::pair<std::string, std::string>> extensions =
+    const std::vector<std::pair<std::string, std::string>> extensions =
     {
         {"CREATED_BY", "AES Crypt Test"},
         {"CREATED_REASON", "For testing purposes"}
@@ -195,7 +203,7 @@ STF_TEST(TestEncryption, EncryptWithExtensions)
         std::ostringstream oss;
 
         // Decrypt the ciphertext
-        auto result = decryptor.Decrypt(u8"secret", iss, oss, 0);
+        auto result = decryptor.Decrypt(u8"secret", iss, oss);
         STF_ASSERT_EQ(DecryptResult::Success, result);
 
         // Ensure the output string length is the expected length
@@ -223,7 +231,7 @@ STF_TEST(TestEncryption, RandomStrings)
         std::string ciphertext;
 
         // Create a string of this length
-        std::size_t length = dist(rng);
+        const std::size_t length = dist(rng);
 
         // Put "length" random characters in the string
         std::generate_n(std::back_insert_iterator(plaintext),
@@ -252,7 +260,7 @@ STF_TEST(TestEncryption, RandomStrings)
             std::ostringstream oss;
 
             // Decrypt the ciphertext
-            auto result = decryptor.Decrypt(u8"secret", iss, oss, 0);
+            auto result = decryptor.Decrypt(u8"secret", iss, oss);
             STF_ASSERT_EQ(DecryptResult::Success, result);
 
             // Ensure the output string length is the expected length
@@ -263,3 +271,5 @@ STF_TEST(TestEncryption, RandomStrings)
         }
     }
 }
+
+} // namespace

@@ -25,24 +25,23 @@
 #include <string>
 #include <cstdint>
 
-namespace {
-
-// Define the StringStreamBuffer class
+// Define the StringStreamBuffer class used for reading the buffer content
 class StringStreamBuffer : public std::streambuf
 {
     public:
-        StringStreamBuffer(const std::span<const char>(buffer))
+        explicit StringStreamBuffer(std::span<const char>(buffer))
         {
-            auto p =  const_cast<char *>(buffer.data());
+            auto *p = const_cast<char *>(buffer.data());
             setg(p, p, p + buffer.size());
             setp(p, p + buffer.size());
         }
 
-        StringStreamBuffer(const std::string &buffer) :
+        explicit StringStreamBuffer(const std::string &buffer) :
             StringStreamBuffer(std::span<const char>(buffer))
         {
         }
-        StringStreamBuffer(const std::span<const std::uint8_t>(buffer)) :
+        explicit StringStreamBuffer(
+            std::span<const std::uint8_t>(buffer)) :
             StringStreamBuffer(
                 std::span(reinterpret_cast<const char *>(buffer.data()),
                           buffer.size()))
@@ -56,27 +55,33 @@ class StringStreamBuffer : public std::streambuf
         {
             if (dir == std::ios_base::cur)
             {
-                if (which & std::ios_base::in) gbump(static_cast<int>(off));
-                if (which & std::ios_base::out) pbump(static_cast<int>(off));
+                if ((which & std::ios_base::in) != 0)
+                {
+                    gbump(static_cast<int>(off));
+                }
+                if ((which & std::ios_base::out) != 0)
+                {
+                    pbump(static_cast<int>(off));
+                }
             }
             else if (dir == std::ios_base::end)
             {
-                if (which & std::ios_base::in)
+                if ((which & std::ios_base::in) != 0)
                 {
                     setg(eback(), egptr() + off, egptr());
                 }
-                if (which & std::ios_base::out)
+                if ((which & std::ios_base::out) != 0)
                 {
                     pbump(static_cast<int>(epptr() - pptr() + off));
                 }
             }
             else if (dir == std::ios_base::beg)
             {
-                if (which & std::ios_base::in)
+                if ((which & std::ios_base::in) != 0)
                 {
                     setg(eback(), eback() + off, egptr());
                 }
-                if (which & std::ios_base::out)
+                if ((which & std::ios_base::out) != 0)
                 {
                     pbump(static_cast<int>(pbase() - pptr() + off));
                 }
@@ -92,5 +97,3 @@ class StringStreamBuffer : public std::streambuf
             return seekoff(pos, std::ios_base::beg, which);
         }
 };
-
-} // namespace

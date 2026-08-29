@@ -16,13 +16,22 @@
  *      None.
  */
 
+#include <istream>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <string>
+#include <memory>
+#include <sstream>
 #include <terra/aescrypt/engine/decryptor.h>
 #include <terra/logger/logger.h>
+#include <terra/logger/log_level.h>
 #include <terra/logger/null_ostream.h>
 #include <terra/stf/stf.h>
 #include "../string_stream_buffer.h"
+
+namespace
+{
 
 using namespace Terra::AESCrypt::Engine;
 using namespace Terra::Logger;
@@ -36,8 +45,8 @@ namespace
 // Structure to hold plaintext and ciphertext pairs
 struct PlaintextCiphertext
 {
-    const std::string plaintext;
-    const std::vector<uint8_t> ciphertext;
+    std::string plaintext;
+    std::vector<std::uint8_t> ciphertext;
 };
 
 } // namespace
@@ -48,7 +57,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
     const std::vector<PlaintextCiphertext> tests =
     {
         {
-            std::string(""),
+            .plaintext = std::string(""),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x00, 0x33, 0x64, 0x05,
                 0xda, 0xcc, 0x29, 0xe2, 0xb1, 0x10, 0xff, 0xe2,
@@ -60,7 +70,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0"),
+            .plaintext = std::string("0"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x01, 0xa9, 0xa8, 0x48,
                 0x14, 0x6a, 0x69, 0x14, 0x62, 0x37, 0x0f, 0x96,
@@ -74,7 +85,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("012"),
+            .plaintext = std::string("012"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x03, 0x90, 0xad, 0x83,
                 0xe2, 0x46, 0xce, 0xfb, 0x46, 0xcc, 0x42, 0x9c,
@@ -88,7 +100,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDE"),
+            .plaintext = std::string("0123456789ABCDE"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x0f, 0x73, 0x56, 0x09,
                 0x40, 0x2a, 0x2a, 0x29, 0xc5, 0x77, 0x8a, 0xff,
@@ -102,7 +115,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF"),
+            .plaintext = std::string("0123456789ABCDEF"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x00, 0xb5, 0xcc, 0xe7,
                 0x25, 0x81, 0x81, 0x33, 0x9f, 0x66, 0xf9, 0x59,
@@ -116,7 +130,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0"),
+            .plaintext = std::string("0123456789ABCDEF0"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x01, 0x2d, 0x9c, 0x44,
                 0xdd, 0x77, 0xba, 0x68, 0x34, 0x74, 0x9d, 0x68,
@@ -132,7 +147,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDE"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDE"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x0f, 0x21, 0x67, 0x71,
                 0x89, 0x9d, 0x05, 0x26, 0xb4, 0xfd, 0xd7, 0x24,
@@ -148,7 +164,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x00, 0x33, 0xd4, 0xe4,
                 0x98, 0xad, 0x2a, 0x1a, 0x4b, 0xbe, 0x6d, 0xcd,
@@ -164,7 +181,8 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF0"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x01, 0x9f, 0xed, 0x9b,
                 0x75, 0x27, 0xe2, 0x4a, 0xf2, 0x33, 0xa7, 0x42,
@@ -182,7 +200,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDE"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDE"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x0f, 0x7a, 0xa9, 0xf7,
                 0x4f, 0xf4, 0x7d, 0x15, 0x1f, 0x6e, 0x50, 0xf7,
@@ -200,7 +220,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x00, 0x54, 0xb1, 0x47,
                 0x3f, 0xcc, 0x88, 0x72, 0x79, 0xfb, 0x83, 0x16,
@@ -218,7 +240,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x01, 0x3f, 0x84, 0x05,
                 0xc6, 0x22, 0x21, 0x69, 0xdc, 0xe7, 0x26, 0xb2,
@@ -238,8 +262,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDE"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDE"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x0f, 0x13, 0x72, 0x52,
                 0x32, 0x41, 0x99, 0xb8, 0x81, 0xe2, 0x1a, 0x7d,
@@ -259,8 +284,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDEF"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x00, 0xbe, 0xbd, 0xfa,
                 0xcd, 0x57, 0x47, 0x54, 0x90, 0x6c, 0x1b, 0x4a,
@@ -280,8 +306,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF0"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDEF0"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x01, 0xa3, 0x7b, 0xd9,
                 0x97, 0xad, 0x72, 0x7e, 0x08, 0xdc, 0x6f, 0xca,
@@ -303,8 +330,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF0123456789ABCDE"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDEF0123456789ABCDE"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x0f, 0x54, 0x29, 0x7f,
                 0xec, 0x57, 0x1a, 0x9d, 0x78, 0x52, 0xfd, 0x71,
@@ -326,8 +354,9 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF0123456789ABCDEF"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDEF0123456789ABCDEF"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x00, 0x0a, 0xce, 0xc2,
                 0x76, 0x6c, 0xdc, 0x1f, 0xe2, 0xb6, 0xe6, 0x76,
@@ -349,8 +378,10 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF0123456789ABCDEF0"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345"
+                                     "6789ABCDEF0123456789ABCDEF0123456789AB"
+                                     "CDEF0"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x01, 0x7a, 0x24, 0x63,
                 0x8c, 0x9a, 0x64, 0x60, 0x75, 0x25, 0x38, 0x0e,
@@ -374,11 +405,14 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789AB"
-                        "CDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF01"
-                        "23456789ABCDEF0123456789ABCDEF0123456789ABCDEF01234567"
-                        "89ABCDEF0123456789ABCDEF0123456789ABCDE"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDEF0123456789ABCDEF01"
+                                     "23456789ABCDEF0123456789ABCDEF0123456789A"
+                                     "BCDEF0123456789ABCDEF0123456789ABCDEF0123"
+                                     "456789ABCDEF0123456789ABCDEF0123456789ABC"
+                                     "DEF0123456789ABCDEF0123456789ABCDEF012345"
+                                     "6789ABCDE"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x0f, 0x37, 0xd8, 0xc5,
                 0x90, 0x74, 0x2c, 0x2b, 0x16, 0xa1, 0x71, 0x68,
@@ -422,11 +456,14 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789AB"
-                        "CDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF01"
-                        "23456789ABCDEF0123456789ABCDEF0123456789ABCDEF01234567"
-                        "89ABCDEF0123456789ABCDEF0123456789ABCDEF"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDEF0123456789ABCDEF01"
+                                     "23456789ABCDEF0123456789ABCDEF0123456789A"
+                                     "BCDEF0123456789ABCDEF0123456789ABCDEF0123"
+                                     "456789ABCDEF0123456789ABCDEF0123456789ABC"
+                                     "DEF0123456789ABCDEF0123456789ABCDEF012345"
+                                     "6789ABCDEF"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x00, 0x94, 0xeb, 0x8f,
                 0x8b, 0x65, 0x1f, 0x22, 0x40, 0x09, 0xfb, 0xe1,
@@ -470,11 +507,14 @@ STF_TEST(TestDecryption, Stream_Format_0)
             }
         },
         {
-            std::string("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF012345"
-                        "6789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789AB"
-                        "CDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF01"
-                        "23456789ABCDEF0123456789ABCDEF0123456789ABCDEF01234567"
-                        "89ABCDEF0123456789ABCDEF0123456789ABCDEF0"),
+            .plaintext = std::string("0123456789ABCDEF0123456789ABCDEF012345678"
+                                     "9ABCDEF0123456789ABCDEF0123456789ABCDEF01"
+                                     "23456789ABCDEF0123456789ABCDEF0123456789A"
+                                     "BCDEF0123456789ABCDEF0123456789ABCDEF0123"
+                                     "456789ABCDEF0123456789ABCDEF0123456789ABC"
+                                     "DEF0123456789ABCDEF0123456789ABCDEF012345"
+                                     "6789ABCDEF0"),
+            .ciphertext =
             {
                 0x41, 0x45, 0x53, 0x00, 0x01, 0xd1, 0xa2, 0x12,
                 0x40, 0x09, 0x3e, 0xe3, 0x60, 0x1b, 0x7c, 0xd3,
@@ -523,12 +563,11 @@ STF_TEST(TestDecryption, Stream_Format_0)
 
     // Create a Logger object; chance null_ostream to std::cerr if debugging
     NullOStream null_ostream;
-    LoggerPointer logger =
+    const LoggerPointer logger =
         std::make_shared<Logger>(null_ostream, LogLevel::Debug);
 
     // Iterate over the test vector
-    std::size_t counter = 0;
-    for (const auto &[plaintext, ciphertext] : tests)
+    for (std::size_t counter = 0; const auto &[plaintext, ciphertext] : tests)
     {
         // Create a Decryptor object
         Decryptor decryptor(logger, std::to_string(counter++));
@@ -541,10 +580,12 @@ STF_TEST(TestDecryption, Stream_Format_0)
         std::istream iss(&cipher_stream_buffer);
 
         // Decrypt the ciphertext
-        auto result = decryptor.Decrypt(password, iss, oss, 0);
+        auto result = decryptor.Decrypt(password, iss, oss);
         STF_ASSERT_EQ(DecryptResult::Success, result);
 
         // Ensure the output string length is the expected length
         STF_ASSERT_EQ(plaintext.size(), oss.str().size());
     }
 }
+
+} // namespace
