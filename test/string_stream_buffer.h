@@ -1,7 +1,7 @@
 /*
  *  string_stream_buffer.h
  *
- *  Copyright (C) 2024
+ *  Copyright (C) 2024, 2026
  *  Terrapane Corporation
  *  All Rights Reserved
  *
@@ -29,30 +29,60 @@
 class StringStreamBuffer : public std::streambuf
 {
     public:
-        explicit StringStreamBuffer(std::span<const char>(buffer))
+        explicit StringStreamBuffer(std::span<const char> buffer)
         {
+            // Internal const_cast is encapsulated here and safe because
+            // setp() is not called; the stream cannot write
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
             auto *p = const_cast<char *>(buffer.data());
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             setg(p, p, p + buffer.size());
-            setp(p, p + buffer.size());
         }
 
-        explicit StringStreamBuffer(const std::string &buffer) :
-            StringStreamBuffer(std::span<const char>(buffer))
+        explicit StringStreamBuffer(std::span<char> buffer)
         {
+            // NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            setg(buffer.data(), buffer.data(), buffer.data() + buffer.size());
+            setp(buffer.data(), buffer.data() + buffer.size());
+            // NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         }
-        explicit StringStreamBuffer(
-            std::span<const std::uint8_t>(buffer)) :
+
+        explicit StringStreamBuffer(std::span<const std::uint8_t> buffer) :
             StringStreamBuffer(
                 std::span(reinterpret_cast<const char *>(buffer.data()),
                           buffer.size()))
         {
         }
+
+        explicit StringStreamBuffer(std::span<std::uint8_t> buffer) :
+            StringStreamBuffer(
+                std::span(reinterpret_cast<char *>(buffer.data()),
+                          buffer.size()))
+        {
+        }
+
+        explicit StringStreamBuffer(std::string &buffer) :
+            StringStreamBuffer(
+                std::span(reinterpret_cast<char *>(buffer.data()),
+                          buffer.size()))
+        {
+        }
+
+        explicit StringStreamBuffer(const std::string &buffer) :
+            StringStreamBuffer(
+                std::span(reinterpret_cast<const char *>(buffer.data()),
+                          buffer.size()))
+        {
+        }
+
     protected:
         pos_type seekoff(off_type off,
                          std::ios_base::seekdir dir,
-                         [[maybe_unused]] std::ios_base::openmode which =
+                         std::ios_base::openmode which =
                              std::ios_base::in | std::ios_base::out) override
         {
+            if (pbase() == nullptr) which &= ~std::ios_base::out;
+
             if (dir == std::ios_base::cur)
             {
                 if ((which & std::ios_base::in) != 0)
@@ -68,6 +98,7 @@ class StringStreamBuffer : public std::streambuf
             {
                 if ((which & std::ios_base::in) != 0)
                 {
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                     setg(eback(), egptr() + off, egptr());
                 }
                 if ((which & std::ios_base::out) != 0)
@@ -79,6 +110,7 @@ class StringStreamBuffer : public std::streambuf
             {
                 if ((which & std::ios_base::in) != 0)
                 {
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                     setg(eback(), eback() + off, egptr());
                 }
                 if ((which & std::ios_base::out) != 0)
@@ -86,8 +118,17 @@ class StringStreamBuffer : public std::streambuf
                     pbump(static_cast<int>(pbase() - pptr() + off));
                 }
             }
+            else
+            {
+                // Return error on invalid seekdir
+                return static_cast<off_type>(-1);
+            }
 
-            return gptr() - eback();
+            // Return active stream head position based on operation type
+            if ((which & std::ios_base::in) != 0) return gptr() - eback();
+            if ((which & std::ios_base::out) != 0) return pptr() - pbase();
+
+            return static_cast<off_type>(-1);
         }
 
         pos_type seekpos(pos_type pos,
